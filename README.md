@@ -1,2 +1,2 @@
-# Tono-Pad
-Generador de bancos de sonido para sampler, basado en detección de tonos y escalas 
+# TonoPad v4
+Abre `index.html` en el navegador. Para GitHub Pages sube el contenido de esta carpeta. Ver HOJA_DE_PROYECTO.md.
