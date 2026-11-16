@@ -211,7 +211,8 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
           <label class="f grow">Bucle de<select id="loopN"><option value="1">1 compás</option><option value="2">2 compases</option><option value="4" selected>4 compases</option><option value="8">8 compases</option><option value="16">16 compases</option></select></label>
           <button class="btn small" id="loopSet" title="Desde el inicio de la región">Aplicar</button>
         </div>
-        <button class="btn primary wide" id="analyze2" disabled>Detectar tono y escala de esta región →</button>
+        <div class="row"><button class="btn primary grow" id="analyze2" disabled>Detectar → banco A</button><button class="btn grow" id="analyzeB2" disabled style="border-color:var(--vio);color:var(--vio)">Detectar → banco B</button></div>
+        <p class="hint">Cada botón detecta el tono de la región marcada y se lo asigna a ese banco: así puedes usar una zona para A y otra distinta para B.</p>
         <details class="sub"><summary>Valores exactos (segundos)</summary>
           <div class="row"><label class="f grow">Inicio<input type="number" id="selA" min="0" step="0.01" inputmode="decimal"></label>
           <label class="f grow">Fin<input type="number" id="selB" min="0" step="0.01" inputmode="decimal"></label>
@@ -240,11 +241,13 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
   <details class="sec" id="secKey" data-fold="key">
     <summary>3 · Tono y dos escalas <small id="keySum"></small></summary>
     <div class="in">
-      <button class="btn primary wide" id="analyze" disabled>Detectar tono y escala de la región</button>
+      <div class="row"><button class="btn primary grow" id="analyze" disabled>Detectar región → banco A</button><button class="btn grow" id="analyzeB" disabled style="border-color:var(--vio);color:var(--vio)">Detectar región → banco B</button></div>
+      <p class="hint">Marca una zona en «Audio y región» y asígnala al banco que quieras. Si solo detectas A, B será una escala compatible con A.</p>
       <div class="prog" id="anProg" hidden><i></i><span></span></div>
       <div id="keyRes" hidden>
-        <h3>Notas que suenan en la región</h3>
+        <h3 id="chromaTitle">Notas que suenan en la región</h3>
         <div class="chroma" id="chroma"></div>
+        <div id="chromaBBox" hidden><h3>Notas que suenan en la zona de B</h3><div class="chroma" id="chromaB"></div></div>
         <p class="hint"><span class="dot a"></span>escala A <span class="dot b"></span>solo en B <span class="dot ab"></span>en las dos <span class="dot out"></span>fuera <span class="dot bs"></span>bajo</p>
         <div id="keyNote" class="note" hidden></div>
       </div>
@@ -259,6 +262,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
       <details class="sub opt" id="optB" open><summary><span class="oid b">B</span> <b id="nameB"></b> <small>compatible</small></summary>
         <div id="notesB" class="scaleNotes"></div>
         <p class="hint" id="subB"></p>
+        <button class="btn small" id="bAlt" hidden>B = escala compatible con A (quitar zona propia)</button>
         <div class="chips" id="candsB"></div>
         <div class="row"><label class="f">Tónica<select id="tonicB"></select></label><label class="f grow">Escala<select id="scaleB"></select></label></div>
       </details>
@@ -275,7 +279,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
         <div class="row"><label class="f grow">Sonido de las 4 notas graves (disposición «bajo + acordes + lead»)<select id="bassSel"></select></label></div>
         <div class="row">
           <label class="f grow">Duración: <b id="durV">3,0 s</b><input type="range" id="dur" min="1" max="6" step="0.5" value="3"></label>
-          <label class="f">Octava<select id="oct"><option value="-1">−1</option><option value="0" selected>0</option><option value="1">+1</option></select></label>
+          <label class="f">Octava<select id="oct"><option value="-3">−3 · muy grave</option><option value="-2">−2</option><option value="-1">−1</option><option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option><option value="3">+3</option><option value="4">+4 · muy agudo</option></select></label>
         </div>
       </details>
     </div>
@@ -355,7 +359,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v8';
+  TP.VERSION = 'v10';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -542,16 +546,17 @@ function tpMusic(root) {
   TP.buildLayout = function (tonic, scaleId, octShift, kind) {
     var sc = TP.scaleById(scaleId), iv = sc.iv, o = 12 * (octShift || 0);
     function mk(midi, zone) { return { midi: midi, zone: zone, root: ((midi - tonic) % 12 + 12) % 12 === 0 }; }
-    if (kind !== 'roles') return ladder(36 + tonic + o, iv, 16).map(function (m) { return mk(m, 'scale'); });
+    // si con tanta octava alguna nota se sale del rango MIDI (0–127), se baja o sube TODO el reparto octavas enteras
+    function fit(a) { var mn = Math.min.apply(null, a), mx = Math.max.apply(null, a), d = 0; if (mx > 127) d = -12 * Math.ceil((mx - 127) / 12); else if (mn < 0) d = 12 * Math.ceil(-mn / 12); return d ? a.map(function (m) { return m + d; }) : a; }
+    if (kind !== 'roles') return fit(ladder(36 + tonic + o, iv, 16)).map(function (m) { return mk(m, 'scale'); });
     var rootB = 33 + ((tonic - 9 + 12) % 12) + o;
     var third = nearest(iv, sc.kind === 'maj' ? 4 : 3), fourth = nearest(iv, 5), fifth = nearest(iv, 7), top = iv[iv.length - 1];
     var bass = [0, fourth, fifth, top].map(function (s) { return rootB + s; });
     if (bass[1] === bass[2]) bass[1] = rootB + third;
     var chord = ladder(rootB + 24, iv, 8);
     var lead = iv.length >= 7 ? [third, fifth, top, 12].map(function (s) { return rootB + 36 + s; }) : ladder(rootB + 24, iv, 12).slice(8);
-    return bass.map(function (m) { return mk(m, 'bass'); })
-      .concat(chord.map(function (m) { return mk(m, 'chord'); }))
-      .concat(lead.map(function (m) { return mk(m, 'lead'); }));
+    var all = fit(bass.concat(chord, lead)), z = ['bass', 'bass', 'bass', 'bass'].concat(chord.map(function () { return 'chord'; }), lead.map(function () { return 'lead'; }));
+    return all.map(function (m, i) { return mk(m, z[i]); });
   };
 
   /* Orientación: 'p1' = grave en pad 1 (arriba-izquierda, numeración SP-404) · 'mpc' = grave abajo-izquierda */
@@ -2012,6 +2017,7 @@ function adgRack(items){
   function each(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
 
   var S = {
+    anB: null, zone: { A: null, B: null }, bMode: 'alt',
     file: null, buf: null, mono: null, sel: [0, 0], analysis: null, struct: null, bpmForce: null,
     opt: { A: { tonic: 9, scale: 'minor' }, B: { tonic: 9, scale: 'dorian' } }, bTouched: false, cur: 'A',
     preset: 'punk_saw', bass: 'moog', dur: 3, oct: 0, kind: 'ladder', orient: 'p1', tune: true, gate: false, style: 'all'
@@ -2085,7 +2091,7 @@ function adgRack(items){
   }
   async function loadFile(f, saved) {
     R.setStage('audio', 'leyendo archivo', 0); R.step('Archivo: ' + f.name + ' (' + f.size + ' bytes, ' + (f.type || 'tipo desconocido') + ')');
-    S.file = f; stopSong(); S.struct = null; S.analysis = null; S.bpmForce = null; S.projId = null; clearTimeout(autoT); wake();
+    S.file = f; stopSong(); S.struct = null; S.analysis = null; S.anB = null; S.zone = { A: null, B: null }; S.bMode = 'alt'; S.bTouched = false; S.bpmForce = null; S.projId = null; clearTimeout(autoT); wake();
     $('dropTxt').innerHTML = '<b>' + esc(f.name) + '</b><br><small>Decodificando…</small>';
     var ab = await f.arrayBuffer();
     R.setStage('audio', 'decodificando', 0.3);
@@ -2098,7 +2104,7 @@ function adgRack(items){
     S.mono = mono;
     R.step('Decodificado: ' + buf.duration.toFixed(2) + ' s, ' + nc + ' canales, ' + buf.sampleRate + ' Hz');
     $('dropTxt').innerHTML = '<b>' + esc(f.name) + '</b><br><small>' + fmt(buf.duration) + ' s · toca para cambiar de archivo</small>';
-    $('waveBox').hidden = false; $('songBtn').disabled = false; $('analyze').disabled = false; $('analyze2').disabled = false; $('keyRes').hidden = true; $('keyManualHint').hidden = false;
+    $('waveBox').hidden = false; $('songBtn').disabled = false; setKeyBtns(false); $('keyRes').hidden = true; $('keyManualHint').hidden = false;
     wave.setAudio(mono, buf.sampleRate); wave.resize();
     S.sel = [0, Math.min(buf.duration, 60)]; wave.setSel(S.sel[0], S.sel[1], true); syncSel(); wave.zoomAll(); projUi();
     $('partsBox').hidden = true; $('partsHint').hidden = false; $('partsSum').textContent = '';
@@ -2199,24 +2205,29 @@ function adgRack(items){
   $('songVol').addEventListener('input', function () { if (songGain) songGain.gain.value = parseFloat(this.value); });
 
   // ------------------------------------------------------------ 3 · tono y dos escalas
-  $('analyze2').onclick = function () { $('secKey').open = true; $('analyze').onclick(); };
-  $('analyze').onclick = guard('análisis', async function () {
-    if (!S.mono || $('analyze').disabled) return;
-    var btn = $('analyze'); btn.disabled = true; $('analyze2').disabled = true;
+  var keyBusy = false;
+  function setKeyBtns(dis) { ['analyze', 'analyze2', 'analyzeB', 'analyzeB2'].forEach(function (id) { $(id).disabled = dis; }); }
+  async function runAnalysis(o) {
+    if (!S.mono || keyBusy) return; keyBusy = true; setKeyBtns(true); $('secKey').open = true;
     try {
-      R.setStage('análisis', 'extrayendo trozo', 0); R.step('Análisis de ' + S.sel[0].toFixed(2) + '–' + S.sel[1].toFixed(2) + ' s');
-      var rate = S.buf.sampleRate, a = Math.floor(S.sel[0] * rate), b = Math.min(S.mono.length, Math.floor(S.sel[1] * rate));
+      R.setStage('análisis', 'extrayendo trozo', 0); R.step('Análisis para el banco ' + o + ': ' + S.sel[0].toFixed(2) + '–' + S.sel[1].toFixed(2) + ' s');
+      var rate = S.buf.sampleRate, zone = S.sel.slice(), a = Math.floor(zone[0] * rate), b = Math.min(S.mono.length, Math.floor(zone[1] * rate));
       if (b - a > rate * 360) b = a + rate * 360;
       var mono0 = S.mono, seg = S.mono.slice(a, b), t0 = performance.now();
       var res = await TP.job({ type: 'key', buf: seg.buffer, sr: rate }, function (p, txt) { setProg('anProg', p, (txt || '') + ' ' + Math.round(p * 100) + ' %'); R.setStage('análisis', txt, p); });
       if (S.mono !== mono0) return;
       R.step('Análisis en ' + Math.round(performance.now() - t0) + ' ms → ' + TP.pcName(res.best.tonic) + ' ' + res.best.scale + ' (' + res.confidence + '), ' + res.tuningCents.toFixed(1) + ' cents');
-      S.analysis = res; S.bTouched = false;
-      S.opt.A = { tonic: res.best.tonic, scale: res.noThird ? 'pentmin' : res.best.scale };
-      pickB(); renderOpts(); refreshAll(); touch();
-      $('secKey').open = true; $('secKey').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } finally { btn.disabled = false; $('analyze2').disabled = false; setProg('anProg', null); }
-  });
+      var pick = { tonic: res.best.tonic, scale: res.noThird ? 'pentmin' : res.best.scale };
+      S.zone[o] = zone;
+      if (o === 'A') { S.analysis = res; S.opt.A = pick; if (S.bMode === 'alt') { S.bTouched = false; pickB(); } }
+      else { S.anB = res; S.bMode = 'zone'; S.opt.B = pick; }
+      renderOpts(); refreshAll(); touch();
+      $('secKey').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } finally { keyBusy = false; if (S.buf) setKeyBtns(false); setProg('anProg', null); }
+  }
+  var runA = guard('análisis A', function () { return runAnalysis('A'); }), runB = guard('análisis B', function () { return runAnalysis('B'); });
+  $('analyze').onclick = $('analyze2').onclick = runA; $('analyzeB').onclick = $('analyzeB2').onclick = runB;
+  $('bAlt').onclick = guard('B compatible', function () { S.bMode = 'alt'; S.anB = null; S.zone.B = null; S.bTouched = false; pickB(); renderOpts(); refreshAll(); touch(); });
   function alts() { var A = S.analysis; return A ? TP.suggestScales(A.chroma, A.bassChroma, S.opt.A.tonic, S.opt.A.scale) : []; }
   function defaultB(a) {
     var m = { pentmin: 'dorian', pentmaj: 'lydian', blues: 'dorian' };
@@ -2232,8 +2243,39 @@ function adgRack(items){
   function optName(o) { var k = S.opt[o], fl = TP.useFlats(k.tonic, k.scale); return TP.pcNameLat(k.tonic, fl) + ' ' + TP.scaleById(k.scale).name.toLowerCase(); }
   function pcs(o) { var k = S.opt[o], m = {}; TP.scaleById(k.scale).iv.forEach(function (v) { m[(k.tonic + v) % 12] = 1; }); return m; }
 
+  function zoneTxt(o) { var z = S.zone[o]; return z ? ' · zona ' + TP.fmtT(z[0]) + '–' + TP.fmtT(z[1]) : ''; }
+  function chipName(k) { return TP.pcName(k.tonic, TP.useFlats(k.tonic, k.scale)) + ' ' + TP.scaleById(k.scale).name.toLowerCase(); }
+  function candChips(box, an, o) {                        // candidatos del análisis de esa zona
+    var cur = S.opt[o], list = an.candidates.map(function (k) { return { tonic: k.tonic, scale: k.scale, score: k.score }; }), seen = {};
+    if (an.pentHint) list.splice(1, 0, { tonic: an.best.tonic, scale: an.pentHint, score: null });
+    list.forEach(function (k) {
+      var key = k.tonic + k.scale; if (seen[key]) return; seen[key] = 1;
+      var b = el('button', 'chip' + (k.tonic === cur.tonic && k.scale === cur.scale ? ' on' : ''), esc(chipName(k)) + '<small>' + (k.score === null ? 'más segura' : Math.round(Math.max(0, Math.min(1, k.score)) * 100) + ' %') + '</small>');
+      b.onclick = guard('elegir ' + o, function () { setOpt(o, k.tonic, k.scale); }); box.appendChild(b);
+    });
+  }
+  function drawChroma(id, an, flats, clsOf) {
+    var ch = $(id); ch.innerHTML = '';
+    for (var pc = 0; pc < 12; pc++) {
+      var c = el('div', 'c ' + clsOf(pc)), bar = el('div', 'bar');
+      bar.style.height = Math.max(2, an.chroma[pc] * 100) + '%';
+      if (an.bassChroma[pc] > 0.08) { var m = el('div', 'bs'); m.style.bottom = Math.min(96, an.bassChroma[pc] * 100) + '%'; bar.appendChild(m); }
+      c.appendChild(bar); c.appendChild(el('div', 'l', TP.pcName(pc, flats))); ch.appendChild(c);
+    }
+  }
+  function anNotes(an, tag) {
+    var n = [];
+    if (an.noThird) n.push(tag + 'casi no suena la tercera (acordes de quinta): no se sabe si es mayor o menor, así que se propone la <b>pentatónica menor</b>, que va bien sobre quintas.');
+    else if (an.pentHint) n.push(tag + 'la 2ª y la 6ª casi no aparecen: la <b>' + TP.scaleById(an.pentHint).name.toLowerCase() + '</b> es la opción más segura si quieres evitar roces.');
+    if (an.confidence === 'baja') n.push(tag + 'la lectura no es clara. Prueba con otra parte, o una donde el bajo se oiga bien, y compara de oído.');
+    return n;
+  }
+  function subFor(an, o) {
+    var k = S.opt[o], isBest = k.tonic === an.best.tonic && k.scale === an.best.scale;
+    return (isBest ? 'Detectada con confianza ' + an.confidence : an.noThird && k.scale === 'pentmin' && k.tonic === an.best.tonic ? 'Casi no suena la tercera: pentatónica menor' : 'Elegida por ti') + zoneTxt(o) + ' · ' + fmt(an.seconds) + ' s analizados · afinación ' + (an.tuningCents >= 0 ? '+' : '−') + fmt(Math.abs(an.tuningCents), 0) + ' cents';
+  }
   function renderOpts() {
-    var A = S.analysis, la = alts();
+    var A = S.analysis, B = S.bMode === 'zone' ? S.anB : null, la = alts(), zoneB = S.bMode === 'zone' && !!B;
     ['A', 'B'].forEach(function (o) {
       var k = S.opt[o], sc = TP.scaleById(k.scale), fl = TP.useFlats(k.tonic, k.scale);
       $('name' + o).textContent = optName(o);
@@ -2243,51 +2285,41 @@ function adgRack(items){
     });
     $('keySum').textContent = 'A: ' + optName('A') + ' · B: ' + optName('B');
     $('padsSum').textContent = optName(S.cur);
-    var kA = S.opt.A, subA = '', kB = S.opt.B, subB = '';
-    if (A) {
-      var isBest = kA.tonic === A.best.tonic && kA.scale === A.best.scale;
-      subA = (isBest ? 'Detectada con confianza ' + A.confidence : A.noThird && kA.scale === 'pentmin' && kA.tonic === A.best.tonic ? 'Casi no suena la tercera: pentatónica menor' : 'Elegida por ti') + ' · ' + fmt(A.seconds) + ' s analizados · afinación ' + (A.tuningCents >= 0 ? '+' : '−') + fmt(Math.abs(A.tuningCents), 0) + ' cents';
-      var cur = la.filter(function (x) { return x.tonic === kB.tonic && x.scale === kB.scale; })[0];
-      subB = cur ? cur.reason : 'Elegida por ti.';
-    } else { subA = 'Elegida a mano. Detecta una región para que se proponga sola.'; subB = 'Escala compatible con la A (cambia al detectar el audio).'; }
-    $('subA').textContent = subA; $('subB').textContent = subB;
-    // chips
-    var cA = $('candsA'), cB = $('candsB'); cA.innerHTML = ''; cB.innerHTML = '';
-    if (A) {
-      var listA = A.candidates.map(function (k) { return { tonic: k.tonic, scale: k.scale, score: k.score }; });
-      if (A.pentHint) listA.splice(1, 0, { tonic: A.best.tonic, scale: A.pentHint, score: null });
-      var seen = {};
-      listA.forEach(function (k) {
-        var key = k.tonic + k.scale; if (seen[key]) return; seen[key] = 1;
-        var fl = TP.useFlats(k.tonic, k.scale), b = el('button', 'chip' + (k.tonic === kA.tonic && k.scale === kA.scale ? ' on' : ''), esc(TP.pcName(k.tonic, fl) + ' ' + TP.scaleById(k.scale).name.toLowerCase()) + '<small>' + (k.score === null ? 'más segura' : Math.round(Math.max(0, Math.min(1, k.score)) * 100) + ' %') + '</small>');
-        b.onclick = guard('elegir A', function () { setOpt('A', k.tonic, k.scale); }); cA.appendChild(b);
-      });
-      la.slice(0, 6).forEach(function (k) {
-        var fl = TP.useFlats(k.tonic, k.scale), b = el('button', 'chip' + (k.tonic === kB.tonic && k.scale === kB.scale ? ' on' : ''), esc(TP.pcName(k.tonic, fl) + ' ' + TP.scaleById(k.scale).name.toLowerCase()) + '<small>' + (risky(k) ? '⚠ ' : '') + Math.round(k.cover * 100) + ' %</small>');
-        b.onclick = guard('elegir B', function () { setOpt('B', k.tonic, k.scale); }); cB.appendChild(b);
-      });
-    }
-    // cromagrama
-    if (A) {
+    var kB = S.opt.B, subA, subB, cA = $('candsA'), cB = $('candsB'); cA.innerHTML = ''; cB.innerHTML = '';
+    subA = A ? subFor(A, 'A') : 'Elegida a mano. Detecta una región para que se proponga sola.';
+    if (zoneB) subB = subFor(B, 'B');
+    else if (A) { var cur = la.filter(function (x) { return x.tonic === kB.tonic && x.scale === kB.scale; })[0]; subB = cur ? cur.reason : 'Elegida por ti.'; }
+    else subB = 'Escala compatible con la A (cambia al detectar el audio), o detecta otra zona para B.';
+    $('subA').textContent = subA; $('subB').textContent = subB; $('bAlt').hidden = !zoneB;
+    if (A) candChips(cA, A, 'A');
+    if (zoneB) candChips(cB, B, 'B');
+    else if (A) la.slice(0, 6).forEach(function (k) {
+      var b = el('button', 'chip' + (k.tonic === kB.tonic && k.scale === kB.scale ? ' on' : ''), esc(chipName(k)) + '<small>' + (risky(k) ? '⚠ ' : '') + Math.round(k.cover * 100) + ' %</small>');
+      b.onclick = guard('elegir B', function () { setOpt('B', k.tonic, k.scale); }); cB.appendChild(b);
+    });
+    // cromagramas
+    var any = A || B;
+    if (any) {
       $('keyRes').hidden = false; $('keyManualHint').hidden = true;
-      var pa = pcs('A'), pb = pcs('B'), ch = $('chroma'), flA = TP.useFlats(kA.tonic, kA.scale); ch.innerHTML = '';
-      for (var pc = 0; pc < 12; pc++) {
-        var cls = pa[pc] && pb[pc] ? 'ab' : pa[pc] ? 'a' : pb[pc] ? 'b' : '', c = el('div', 'c ' + cls), bar = el('div', 'bar');
-        bar.style.height = Math.max(2, A.chroma[pc] * 100) + '%';
-        if (A.bassChroma[pc] > 0.08) { var m = el('div', 'bs'); m.style.bottom = Math.min(96, A.bassChroma[pc] * 100) + '%'; bar.appendChild(m); }
-        c.appendChild(bar); c.appendChild(el('div', 'l', TP.pcName(pc, flA))); ch.appendChild(c);
+      var pa = pcs('A'), pb = pcs('B');
+      if (zoneB) {
+        $('chromaTitle').textContent = A ? 'Notas que suenan en la zona de A' + zoneTxt('A') : '';
+        $('chromaTitle').hidden = !A; $('chroma').hidden = !A;
+        if (A) drawChroma('chroma', A, TP.useFlats(S.opt.A.tonic, S.opt.A.scale), function (pc) { return pa[pc] ? 'a' : ''; });
+        $('chromaBBox').hidden = false; drawChroma('chromaB', B, TP.useFlats(kB.tonic, kB.scale), function (pc) { return pb[pc] ? 'b' : ''; });
+        $('chromaBBox').firstElementChild.textContent = 'Notas que suenan en la zona de B' + zoneTxt('B');
+      } else {
+        $('chromaTitle').hidden = false; $('chroma').hidden = false; $('chromaBBox').hidden = true; $('chromaTitle').textContent = 'Notas que suenan en la región' + zoneTxt('A');
+        drawChroma('chroma', A, TP.useFlats(S.opt.A.tonic, S.opt.A.scale), function (pc) { return pa[pc] && pb[pc] ? 'ab' : pa[pc] ? 'a' : pb[pc] ? 'b' : ''; });
       }
-      var notes = [];
-      if (A.noThird) notes.push('En este trozo casi no suena la tercera (acordes de quinta), así que no se sabe si es mayor o menor: la A es la <b>pentatónica menor</b>, que va bien sobre quintas.');
-      else if (A.pentHint) notes.push('La 2ª y la 6ª casi no aparecen: la <b>' + TP.scaleById(A.pentHint).name.toLowerCase() + '</b> es la opción más segura si quieres evitar roces.');
-      if (A.confidence === 'baja') notes.push('La lectura no es clara. Prueba con otra parte, o una donde el bajo se oiga bien, y compara de oído A y B.');
-      $('keyNote').hidden = !notes.length; $('keyNote').innerHTML = notes.join('<br>');
-      $('tuneTxt').textContent = 'Afinar las muestras a la canción (' + (A.tuningCents >= 0 ? '+' : '−') + fmt(Math.abs(A.tuningCents), 0) + ' cents · La ≈ ' + fmt(A.aRef) + ' Hz)';
-    }
+      var notes = (A ? anNotes(A, zoneB ? 'A: ' : 'En este trozo ') : []).concat(zoneB ? anNotes(B, 'B: ') : []);
+      $('keyNote').hidden = !notes.length; $('keyNote').innerHTML = notes.map(function (t) { return t.charAt(0).toUpperCase() + t.slice(1); }).join('<br>');
+      var T = A || B; $('tuneTxt').textContent = 'Afinar las muestras a la canción (' + (T.tuningCents >= 0 ? '+' : '−') + fmt(Math.abs(T.tuningCents), 0) + ' cents · La ≈ ' + fmt(T.aRef) + ' Hz)';
+    } else { $('keyRes').hidden = true; $('keyManualHint').hidden = false; }
   }
   function setOpt(o, tonic, scale) {
     S.opt[o] = { tonic: tonic, scale: scale }; R.step('Opción ' + o + ': ' + TP.pcName(tonic) + ' ' + scale);
-    if (o === 'B') S.bTouched = true; else { pickB(); }
+    if (o === 'B') S.bTouched = true; else if (S.bMode === 'alt') pickB();
     renderOpts(); refreshAll();
   }
   (function () {
@@ -2339,7 +2371,7 @@ function adgRack(items){
   })();
 
   // ------------------------------------------------------------ 5 · pads
-  function cents() { return S.tune && S.analysis ? S.analysis.tuningCents : 0; }
+  function cents() { var T = S.analysis || S.anB; return S.tune && T ? T.tuningCents : 0; }
   function padsFor(o) {                 // 16 entradas por nº de pad SP-404 (1 = arriba-izquierda)
     var k = S.opt[o], lay = TP.buildLayout(k.tonic, k.scale, S.oct, S.kind);
     return TP.padsFromSlots(lay, S.orient).map(function (p) { return { midi: p.midi, zone: p.zone, root: p.root, preset: p.zone === 'bass' ? S.bass : S.preset }; });
@@ -2420,7 +2452,7 @@ function adgRack(items){
       b.setAttribute('aria-label', 'Pad ' + (i + 1) + ', ' + TP.midiName(p.midi, flats) + ', ' + ZONES[p.zone]);
     });
     var col = { scale: S.cur === 'A' ? 'var(--acc)' : 'var(--vio)', bass: 'var(--acc)', chord: 'var(--amb)', lead: 'var(--pink)' };
-    $('legend').innerHTML = Object.keys(zones).map(function (z) { return '<span><i style="background:' + col[z] + '"></i>' + ZONES[z] + ' · ' + esc(TP.presetById(z === 'bass' ? S.bass : S.preset).name) + '</span>'; }).join('') + '<span>● tónica</span>';
+    $('legend').innerHTML = Object.keys(zones).map(function (z) { return '<span><i style="background:' + col[z] + '"></i>' + ZONES[z] + ' · ' + esc(TP.presetById(z === 'bass' ? S.bass : S.preset).name) + '</span>'; }).join('') + '<span>● tónica</span>' + (function () { var ms = pads.map(function (p) { return p.midi; }), lo = Math.min.apply(null, ms), hi = Math.max.apply(null, ms); return lo < 28 ? '<span style="color:var(--amb)">⚠ notas muy graves: en altavoces pequeños casi no se oyen</span>' : hi > 100 ? '<span style="color:var(--amb)">⚠ notas muy agudas: pueden sonar finas o estridentes</span>' : ''; })();
   }
   /* Genera (en el worker) las 16 muestras de una opción. La opción activa va primero; la otra, después. */
   async function renderBank(o, quiet) {
@@ -2537,11 +2569,12 @@ function adgRack(items){
       });
     });
   }
+  function serAn(A) { return A ? { best: A.best, confidence: A.confidence, margin: A.margin, tuningCents: A.tuningCents, aRef: A.aRef, seconds: A.seconds, pentHint: A.pentHint || null, noThird: !!A.noThird, candidates: A.candidates.map(function (c) { return { tonic: c.tonic, scale: c.scale, score: c.score }; }), chroma: Array.from(A.chroma), bassChroma: Array.from(A.bassChroma) } : null; }
   function snapshot() {
     var A = S.analysis, st = S.struct;
     return {
       sel: S.sel.slice(), opt: JSON.parse(JSON.stringify(S.opt)), bTouched: S.bTouched, cur: S.cur, preset: S.preset, bass: S.bass, dur: S.dur, oct: S.oct, kind: S.kind, orient: S.orient, tune: S.tune, gate: S.gate, style: S.style, bpmForce: S.bpmForce,
-      analysis: A ? { best: A.best, confidence: A.confidence, margin: A.margin, tuningCents: A.tuningCents, aRef: A.aRef, seconds: A.seconds, pentHint: A.pentHint || null, noThird: !!A.noThird, candidates: A.candidates.map(function (c) { return { tonic: c.tonic, scale: c.scale, score: c.score }; }), chroma: Array.from(A.chroma), bassChroma: Array.from(A.bassChroma) } : null,
+      analysis: serAn(A), anB: serAn(S.anB), zone: S.zone, bMode: S.bMode,
       struct: st ? { bpm: st.bpm, bars: Array.from(st.bars), beats: Array.from(st.beats), sections: st.sections.map(function (x) { return { start: x.start, end: x.end, label: x.label, cluster: x.cluster, startBar: x.startBar, endBar: x.endBar, nBars: x.nBars, loopBars: x.loopBars }; }) } : null
     };
   }
@@ -2593,16 +2626,16 @@ function adgRack(items){
   $('projNew').onclick = guard('nuevo proyecto', async function () {
     if (S.buf && !S.projId && !window.confirm('Este trabajo no está guardado. ¿Empezar uno nuevo y descartarlo?')) return;
     if (S.projId) { clearTimeout(autoT); await saveProject(false, true); }
-    stopSong(); S.file = null; S.buf = null; S.mono = null; S.sel = [0, 0]; S.analysis = null; S.struct = null; S.bpmForce = null; S.projId = null; S.bTouched = false;
+    stopSong(); S.file = null; S.buf = null; S.mono = null; S.sel = [0, 0]; S.analysis = null; S.anB = null; S.zone = { A: null, B: null }; S.bMode = 'alt'; S.struct = null; S.bpmForce = null; S.projId = null; S.bTouched = false;
     S.opt.A = { tonic: 9, scale: 'minor' }; S.opt.B = defaultB(S.opt.A); wave.clear();
     $('file').value = ''; $('dropTxt').innerHTML = '<b>Elige o arrastra un audio</b><br><small>WAV, MP3, M4A, OGG, FLAC… No sale de tu dispositivo.</small>';
-    $('waveBox').hidden = true; $('songBtn').disabled = true; $('analyze').disabled = true; $('analyze2').disabled = true; $('keyRes').hidden = true; $('keyManualHint').hidden = false;
+    $('waveBox').hidden = true; $('songBtn').disabled = true; setKeyBtns(true); $('keyRes').hidden = true; $('keyManualHint').hidden = false;
     $('partsBox').hidden = true; $('partsHint').hidden = false; $('partsSum').textContent = ''; $('partsList').innerHTML = ''; $('barTxt').textContent = 'sin audio';
     $('projName').value = ''; $('projSum').textContent = ''; projUi(); renderOpts(); refreshAll(); listProjects(); pmsg('Proyecto nuevo. Elige un audio en «Audio y región».');
     $('secAudio').open = true; $('secAudio').scrollIntoView({ behavior: 'smooth', block: 'start' }); R.step('Proyecto nuevo');
   });
   function applySaved(p) {
-    S.projId = p.id; S.analysis = p.analysis || null; S.struct = p.struct || null; S.bpmForce = p.bpmForce || null;
+    S.projId = p.id; S.analysis = p.analysis || null; S.anB = p.anB || null; S.zone = p.zone || { A: null, B: null }; S.bMode = p.bMode || 'alt'; S.struct = p.struct || null; S.bpmForce = p.bpmForce || null;
     ['opt', 'bTouched', 'cur', 'preset', 'bass', 'dur', 'oct', 'kind', 'orient', 'tune', 'gate', 'style'].forEach(function (k) { if (p[k] !== undefined) S[k] = p[k]; });
     $('dur').value = S.dur; $('durV').textContent = fmt(S.dur) + ' s'; $('oct').value = S.oct; $('kind').value = S.kind; $('orient').value = S.orient; $('gate').checked = S.gate; $('tune').checked = S.tune; $('bassSel').value = S.bass;
     renderStyles(); renderPresets(); $('soundSum').textContent = TP.presetById(S.preset).name;

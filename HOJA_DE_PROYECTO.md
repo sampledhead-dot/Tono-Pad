@@ -22,6 +22,8 @@ AudioContext creado al arrancar (`latencyHint:interactive`) y reanudado en el pr
 
 ## Historial
 - v1: primera versión (una región, 2 disposiciones A/B).
+- v10: dos zonas distintas: «Detectar → banco A / banco B» analiza la región marcada y la asigna a ese banco (B puede tener zona propia o seguir siendo la escala compatible con A). Se guarda en los proyectos.
+- v9: octava de −3 a +4 (antes −1 a +1); si el reparto se sale del rango MIDI 0–127 se desplaza entero por octavas; aviso en pads si hay notas muy graves o agudas.
 - v8: botón «Nuevo proyecto» (guarda el actual si ya estaba guardado, pregunta si no, y deja la app en blanco).
 - v7: **proyectos guardados** en el navegador (IndexedDB: audio, región, partes, análisis, escalas A/B, sonidos y ajustes), autoguardado tras el primer «Guardar», abrir/borrar, y exportar/importar a archivo `.tonopad` (ZIP con `project.json` + el audio) para pasar de un dispositivo a otro.
 - v6: pads tocables con controlador MIDI (Web MIDI: por pad desde una nota inicial o por coincidencia de nota; velocidad opcional) y letras del teclado visibles en los pads.
