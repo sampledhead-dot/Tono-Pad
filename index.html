@@ -164,6 +164,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
     <summary>Proyectos <small id="projSum"></small></summary>
     <div class="in">
       <p class="hint" id="projHint">Guarda el audio, la región, las partes, el tono, las dos escalas y los sonidos para volver a ellos. Se guardan en este navegador; para llevarlos a otro dispositivo, expórtalos a un archivo.</p>
+      <button class="btn wide" id="projNew">＋ Nuevo proyecto</button>
       <div class="row"><label class="f grow">Nombre del proyecto<input type="text" id="projName" maxlength="60" placeholder="Se usa el nombre del audio" class="txt"></label></div>
       <div class="row"><button class="btn primary grow" id="projSave" disabled>Guardar</button><button class="btn grow" id="projSaveNew" disabled>Guardar como nuevo</button></div>
       <div class="note" id="projMsg" hidden></div>
@@ -354,7 +355,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v7';
+  TP.VERSION = 'v8';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -1771,6 +1772,7 @@ function adgRack(items){
     }
     this.pyr = lv; this.resize();
   };
+  P.clear = function () { this.mono = null; this.n = 0; this.dur = 0; this.pyr = null; this.sel = [0, 0]; this.view = [0, 1]; this.bars = []; this.beats = []; this.sections = []; this.playPos = null; this._miniPk = null; this.draw(); };
   P.setGrid = function (bars, beats) { this.bars = bars || []; this.beats = beats || []; this.draw(); };
   P.setSections = function (s) { this.sections = s || []; this.draw(); };
   P.setSel = function (a, b, silent) {
@@ -2205,8 +2207,9 @@ function adgRack(items){
       R.setStage('análisis', 'extrayendo trozo', 0); R.step('Análisis de ' + S.sel[0].toFixed(2) + '–' + S.sel[1].toFixed(2) + ' s');
       var rate = S.buf.sampleRate, a = Math.floor(S.sel[0] * rate), b = Math.min(S.mono.length, Math.floor(S.sel[1] * rate));
       if (b - a > rate * 360) b = a + rate * 360;
-      var seg = S.mono.slice(a, b), t0 = performance.now();
+      var mono0 = S.mono, seg = S.mono.slice(a, b), t0 = performance.now();
       var res = await TP.job({ type: 'key', buf: seg.buffer, sr: rate }, function (p, txt) { setProg('anProg', p, (txt || '') + ' ' + Math.round(p * 100) + ' %'); R.setStage('análisis', txt, p); });
+      if (S.mono !== mono0) return;
       R.step('Análisis en ' + Math.round(performance.now() - t0) + ' ms → ' + TP.pcName(res.best.tonic) + ' ' + res.best.scale + ' (' + res.confidence + '), ' + res.tuningCents.toFixed(1) + ' cents');
       S.analysis = res; S.bTouched = false;
       S.opt.A = { tonic: res.best.tonic, scale: res.noThird ? 'pentmin' : res.best.scale };
@@ -2587,6 +2590,17 @@ function adgRack(items){
     var f = new File([blob], rec.fileName, { type: rec.fileType || blob.type }); $('projName').value = rec.name; R.step('Abrir proyecto: ' + rec.name);
     await loadFile(f, rec); $('secAudio').open = true; pmsg('Proyecto «' + rec.name + '» abierto.');
   }
+  $('projNew').onclick = guard('nuevo proyecto', async function () {
+    if (S.buf && !S.projId && !window.confirm('Este trabajo no está guardado. ¿Empezar uno nuevo y descartarlo?')) return;
+    if (S.projId) { clearTimeout(autoT); await saveProject(false, true); }
+    stopSong(); S.file = null; S.buf = null; S.mono = null; S.sel = [0, 0]; S.analysis = null; S.struct = null; S.bpmForce = null; S.projId = null; S.bTouched = false;
+    S.opt.A = { tonic: 9, scale: 'minor' }; S.opt.B = defaultB(S.opt.A); wave.clear();
+    $('file').value = ''; $('dropTxt').innerHTML = '<b>Elige o arrastra un audio</b><br><small>WAV, MP3, M4A, OGG, FLAC… No sale de tu dispositivo.</small>';
+    $('waveBox').hidden = true; $('songBtn').disabled = true; $('analyze').disabled = true; $('analyze2').disabled = true; $('keyRes').hidden = true; $('keyManualHint').hidden = false;
+    $('partsBox').hidden = true; $('partsHint').hidden = false; $('partsSum').textContent = ''; $('partsList').innerHTML = ''; $('barTxt').textContent = 'sin audio';
+    $('projName').value = ''; $('projSum').textContent = ''; projUi(); renderOpts(); refreshAll(); listProjects(); pmsg('Proyecto nuevo. Elige un audio en «Audio y región».');
+    $('secAudio').open = true; $('secAudio').scrollIntoView({ behavior: 'smooth', block: 'start' }); R.step('Proyecto nuevo');
+  });
   function applySaved(p) {
     S.projId = p.id; S.analysis = p.analysis || null; S.struct = p.struct || null; S.bpmForce = p.bpmForce || null;
     ['opt', 'bTouched', 'cur', 'preset', 'bass', 'dur', 'oct', 'kind', 'orient', 'tune', 'gate', 'style'].forEach(function (k) { if (p[k] !== undefined) S[k] = p[k]; });
