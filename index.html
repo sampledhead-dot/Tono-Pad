@@ -143,6 +143,9 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .pad .kb{position:absolute;right:8px;bottom:6px;font:600 10px ui-monospace,Menlo,monospace;opacity:.45;text-transform:uppercase}
 @media (hover:none){.pad .kb{display:none}}
+input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border-radius:10px;padding:9px 10px;min-height:44px;width:100%;font:inherit}
+.proj .tx small{display:block}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
 </style>
 </head>
 <body>
@@ -157,6 +160,23 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 </div>
 
 <main>
+  <details class="sec" id="secProj" data-fold="proj">
+    <summary>Proyectos <small id="projSum"></small></summary>
+    <div class="in">
+      <p class="hint" id="projHint">Guarda el audio, la región, las partes, el tono, las dos escalas y los sonidos para volver a ellos. Se guardan en este navegador; para llevarlos a otro dispositivo, expórtalos a un archivo.</p>
+      <div class="row"><label class="f grow">Nombre del proyecto<input type="text" id="projName" maxlength="60" placeholder="Se usa el nombre del audio" class="txt"></label></div>
+      <div class="row"><button class="btn primary grow" id="projSave" disabled>Guardar</button><button class="btn grow" id="projSaveNew" disabled>Guardar como nuevo</button></div>
+      <div class="note" id="projMsg" hidden></div>
+      <h3>Guardados</h3>
+      <div id="projList" class="parts"></div>
+      <p class="hint" id="projEmpty">Todavía no hay proyectos guardados.</p>
+      <div class="row">
+        <button class="btn small" id="projExport" disabled>Exportar a archivo (.tonopad)</button>
+        <label class="btn small" style="cursor:pointer">Importar archivo<input type="file" id="projImport" accept=".tonopad,.zip" style="display:none"></label>
+      </div>
+    </div>
+  </details>
+
   <details class="sec" id="secAudio" data-fold="audio" open>
     <summary>1 · Audio y región</summary>
     <div class="in">
@@ -334,7 +354,7 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v6';
+  TP.VERSION = 'v7';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -1493,6 +1513,24 @@ TP.SP404_TPL = {"padconf": "H4sIAIn2+WoC/+3XwQrBABzH8f94AY+wcuAxdtCOWjyBshvlplx4
     return new Uint8Array(head.concat(ev));
   };
 
+  /* ZIP → { nombre: Uint8Array } (admite almacenado y deflate) */
+  TP.unzip = async function (u8) {
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.length), e = u8.length - 22, out = {}, dec = new TextDecoder();
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error('No es un archivo ZIP válido');
+    var n = dv.getUint16(e + 10, true), off = dv.getUint32(e + 16, true);
+    for (var i = 0; i < n; i++) {
+      if (dv.getUint32(off, true) !== 0x02014b50) throw new Error('ZIP dañado');
+      var method = dv.getUint16(off + 10, true), cs = dv.getUint32(off + 20, true), nl = dv.getUint16(off + 28, true), el = dv.getUint16(off + 30, true), cl = dv.getUint16(off + 32, true), lho = dv.getUint32(off + 42, true);
+      var name = dec.decode(u8.subarray(off + 46, off + 46 + nl)), ds = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true), raw = u8.subarray(ds, ds + cs);
+      if (method === 0) out[name] = raw;
+      else if (method === 8) { var d = new root.DecompressionStream('deflate-raw'), w = d.writable.getWriter(); w.write(raw); w.close(); out[name] = new Uint8Array(await new Response(d.readable).arrayBuffer()); }
+      else throw new Error('Compresión de ZIP no admitida');
+      off += 46 + nl + el + cl;
+    }
+    return out;
+  };
+
   var xesc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
 
   /* ======== BLOQUE TOMADO DE CRAZYHEAD (Move y Live) ======== */
@@ -1981,7 +2019,7 @@ function adgRack(items){
 
   R.setProvider(function () {
     return {
-      options: { opcionA: S.opt.A, opcionB: S.opt.B, activa: S.cur, sonido: S.preset, sonidoBajo: S.bass, duracion: S.dur, octava: S.oct, reparto: S.kind, disposicion: S.orient, afinarACancion: S.tune, cortarAlSoltar: S.gate, estilo: S.style, seleccion: S.sel, bpmForzado: S.bpmForce, workers: TP.workerMode, midi: midi.names, sampleRateAudio: sr, latencia: lat.slice(-10) },
+      options: { opcionA: S.opt.A, opcionB: S.opt.B, activa: S.cur, sonido: S.preset, sonidoBajo: S.bass, duracion: S.dur, octava: S.oct, reparto: S.kind, disposicion: S.orient, afinarACancion: S.tune, cortarAlSoltar: S.gate, estilo: S.style, seleccion: S.sel, bpmForzado: S.bpmForce, workers: TP.workerMode, midi: midi.names, proyectoId: S.projId, sampleRateAudio: sr, latencia: lat.slice(-10) },
       file: S.file ? { nombre: S.file.name, tamano: S.file.size, tipo: S.file.type, duracion: S.buf ? S.buf.duration : null, canales: S.buf ? S.buf.numberOfChannels : null, frecuencia: S.buf ? S.buf.sampleRate : null } : null,
       result: S.analysis ? { mejor: S.analysis.best, confianza: S.analysis.confidence, afinacionCents: S.analysis.tuningCents, candidatos: S.analysis.candidates, croma: S.analysis.chroma, cromaBajo: S.analysis.bassChroma, estructura: S.struct ? { bpm: S.struct.bpm, partes: S.struct.sections.map(function (s) { return [s.label, +s.start.toFixed(2), +s.end.toFixed(2)]; }) } : null } : (S.struct ? { estructura: { bpm: S.struct.bpm, partes: S.struct.sections.length } } : null)
     };
@@ -2027,7 +2065,7 @@ function adgRack(items){
 
   wave = new TP.Wave({
     main: $('wvMain'), ph: $('wvPh'), mini: $('wvMini'), box: $('wv'),
-    onSel: function (a, b, final) { S.sel = [a, b]; syncSel(); if (final) { R.step('Región ' + a.toFixed(3) + '–' + b.toFixed(3) + ' s'); restartIfPlaying(); } },
+    onSel: function (a, b, final) { S.sel = [a, b]; syncSel(); if (final) { touch(); R.step('Región ' + a.toFixed(3) + '–' + b.toFixed(3) + ' s'); restartIfPlaying(); } },
     onView: function (v) { var z = wave.zoomLevel(); $('zoomInfo').textContent = 'Vista de ' + fmt(v[1] - v[0], v[1] - v[0] < 10 ? 2 : 1) + ' s · zoom ×' + fmt(z, z < 10 ? 1 : 0) + ' · rueda o pellizco = zoom · arrastra = región'; }
   });
   function syncSel() {
@@ -2038,14 +2076,14 @@ function adgRack(items){
     each('.part', function (p) { var s = S.struct && S.struct.sections[+p.getAttribute('data-i')]; p.classList.toggle('on', !!s && Math.abs(s.start - a) < 0.06 && Math.abs(s.end - b) < 0.06); });
   }
   function barLen() { var s = S.struct; return s && s.bars && s.bars.length > 1 ? (s.bars[s.bars.length - 1] - s.bars[0]) / (s.bars.length - 1) : 0; }
-  function setRegion(a, b, show) { wave.setSel(a, b, true); S.sel = wave.sel.slice(); syncSel(); if (show) wave.zoomSel(); restartIfPlaying(); }
+  function setRegion(a, b, show) { wave.setSel(a, b, true); S.sel = wave.sel.slice(); syncSel(); touch(); if (show) wave.zoomSel(); restartIfPlaying(); }
 
   function decodeFile(ab) {
     return new Promise(function (res, rej) { var p = ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); });
   }
-  async function loadFile(f) {
+  async function loadFile(f, saved) {
     R.setStage('audio', 'leyendo archivo', 0); R.step('Archivo: ' + f.name + ' (' + f.size + ' bytes, ' + (f.type || 'tipo desconocido') + ')');
-    S.file = f; stopSong(); S.struct = null; S.analysis = null; S.bpmForce = null; wake();
+    S.file = f; stopSong(); S.struct = null; S.analysis = null; S.bpmForce = null; S.projId = null; clearTimeout(autoT); wake();
     $('dropTxt').innerHTML = '<b>' + esc(f.name) + '</b><br><small>Decodificando…</small>';
     var ab = await f.arrayBuffer();
     R.setStage('audio', 'decodificando', 0.3);
@@ -2060,14 +2098,14 @@ function adgRack(items){
     $('dropTxt').innerHTML = '<b>' + esc(f.name) + '</b><br><small>' + fmt(buf.duration) + ' s · toca para cambiar de archivo</small>';
     $('waveBox').hidden = false; $('songBtn').disabled = false; $('analyze').disabled = false; $('analyze2').disabled = false; $('keyRes').hidden = true; $('keyManualHint').hidden = false;
     wave.setAudio(mono, buf.sampleRate); wave.resize();
-    S.sel = [0, Math.min(buf.duration, 60)]; wave.setSel(S.sel[0], S.sel[1], true); syncSel(); wave.zoomAll();
+    S.sel = [0, Math.min(buf.duration, 60)]; wave.setSel(S.sel[0], S.sel[1], true); syncSel(); wave.zoomAll(); projUi();
     $('partsBox').hidden = true; $('partsHint').hidden = false; $('partsSum').textContent = '';
     R.setStage('audio', 'listo', 1);
-    detectStructure();
+    if (saved) applySaved(saved); else detectStructure();
   }
 
   /* ---------- partes de la canción ---------- */
-  var stBusy = false;
+  var autoT = 0, stBusy = false;
   async function detectStructure() {
     if (!S.mono || stBusy) return; stBusy = true;
     var mono = S.mono;
@@ -2077,7 +2115,7 @@ function adgRack(items){
       var res = await TP.job({ type: 'struct', buf: mono.buffer, sr: S.buf.sampleRate, bpm: S.bpmForce }, function (p, t) { setProg('stProg', p, (t || 'Analizando') + ' ' + Math.round(p * 100) + ' %'); R.setStage('estructura', t, p); });
       if (mono !== S.mono) return;                        // se cargó otro archivo mientras tanto
       S.struct = res; R.step('Estructura en ' + Math.round(performance.now() - t0) + ' ms · ' + res.bpm.toFixed(1) + ' BPM · ' + res.sections.length + ' partes');
-      wave.setGrid(res.bars, res.beats); wave.setSections(res.sections); renderParts(); syncSel();
+      wave.setGrid(res.bars, res.beats); wave.setSections(res.sections); renderParts(); syncSel(); touch();
       if (!$('secParts').hasAttribute('data-seen')) { $('secParts').setAttribute('data-seen', '1'); $('secParts').open = true; }
     } finally { stBusy = false; setProg('stProg', null); }
   }
@@ -2172,7 +2210,7 @@ function adgRack(items){
       R.step('Análisis en ' + Math.round(performance.now() - t0) + ' ms → ' + TP.pcName(res.best.tonic) + ' ' + res.best.scale + ' (' + res.confidence + '), ' + res.tuningCents.toFixed(1) + ' cents');
       S.analysis = res; S.bTouched = false;
       S.opt.A = { tonic: res.best.tonic, scale: res.noThird ? 'pentmin' : res.best.scale };
-      pickB(); renderOpts(); refreshAll();
+      pickB(); renderOpts(); refreshAll(); touch();
       $('secKey').open = true; $('secKey').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } finally { btn.disabled = false; $('analyze2').disabled = false; setProg('anProg', null); }
   });
@@ -2404,7 +2442,7 @@ function adgRack(items){
   }
   var refreshing = 0;
   async function refreshAll() {
-    var my = ++refreshing; drawPads(); padBufs = new Array(16); each('.pad', function (b) { b.classList.remove('ready'); });
+    var my = ++refreshing; touch(); drawPads(); padBufs = new Array(16); each('.pad', function (b) { b.classList.remove('ready'); });
     var first = S.cur, other = S.cur === 'A' ? 'B' : 'A';
     var ok = await renderBank(first, false); if (!ok || my !== refreshing) return;
     setProg('rdProg', null); R.step('Banco ' + first + ' listo: ' + optName(first) + ' · ' + S.preset);
@@ -2413,7 +2451,7 @@ function adgRack(items){
   refreshAll = guard('generar banco', refreshAll);
   each('.tab', function (t) {
     t.onclick = guard('opción', function () {
-      S.cur = t.getAttribute('data-o'); each('.tab', function (x) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t); });
+      S.cur = t.getAttribute('data-o'); touch(); each('.tab', function (x) { x.classList.toggle('on', x === t); x.setAttribute('aria-selected', x === t); });
       $('padsSum').textContent = optName(S.cur); R.step('Pads: opción ' + S.cur);
       drawPads(); var pads = padsFor(S.cur), c = cents(); padBufs = new Array(16);
       pads.forEach(function (p, i) { var b = cache.get([p.preset, p.midi, S.dur, c.toFixed(2), sr].join('|')); if (b) { padBufs[i] = b; padEls[i].classList.add('ready'); } });
@@ -2478,10 +2516,109 @@ function adgRack(items){
     });
   });
 
+  // ------------------------------------------------------------ proyectos guardados (IndexedDB)
+  S.projId = null;
+  function idb() {
+    return new Promise(function (res, rej) {
+      if (!window.indexedDB) return rej(new Error('Este navegador no permite guardar proyectos (IndexedDB no disponible)'));
+      var r = indexedDB.open('tonopad', 1);
+      r.onupgradeneeded = function () { var d = r.result; d.createObjectStore('projects', { keyPath: 'id' }); d.createObjectStore('audio'); };
+      r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error || new Error('No se pudo abrir el almacenamiento')); };
+    });
+  }
+  function dbDo(store, mode, fn) {
+    return idb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var t = db.transaction(store, mode), out = fn(t.objectStore(store));
+        t.oncomplete = function () { db.close(); res(out && out.result); }; t.onerror = t.onabort = function () { db.close(); rej(t.error || new Error('Error al guardar (¿falta espacio?)')); };
+      });
+    });
+  }
+  function snapshot() {
+    var A = S.analysis, st = S.struct;
+    return {
+      sel: S.sel.slice(), opt: JSON.parse(JSON.stringify(S.opt)), bTouched: S.bTouched, cur: S.cur, preset: S.preset, bass: S.bass, dur: S.dur, oct: S.oct, kind: S.kind, orient: S.orient, tune: S.tune, gate: S.gate, style: S.style, bpmForce: S.bpmForce,
+      analysis: A ? { best: A.best, confidence: A.confidence, margin: A.margin, tuningCents: A.tuningCents, aRef: A.aRef, seconds: A.seconds, pentHint: A.pentHint || null, noThird: !!A.noThird, candidates: A.candidates.map(function (c) { return { tonic: c.tonic, scale: c.scale, score: c.score }; }), chroma: Array.from(A.chroma), bassChroma: Array.from(A.bassChroma) } : null,
+      struct: st ? { bpm: st.bpm, bars: Array.from(st.bars), beats: Array.from(st.beats), sections: st.sections.map(function (x) { return { start: x.start, end: x.end, label: x.label, cluster: x.cluster, startBar: x.startBar, endBar: x.endBar, nBars: x.nBars, loopBars: x.loopBars }; }) } : null
+    };
+  }
+  function fileBase(n) { return n.replace(/\.[^.]+$/, ''); }
+  function pmsg(t) { $('projMsg').hidden = !t; $('projMsg').textContent = t || ''; }
+  function projUi() {
+    var has = !!S.buf; $('projSave').disabled = !has; $('projSaveNew').disabled = !has; $('projExport').disabled = !has;
+    if (has && !$('projName').value) $('projName').value = fileBase(S.file.name);
+  }
+  async function saveProject(asNew, quiet) {
+    if (!S.file || !S.buf) return;
+    var isNew = asNew || !S.projId, id = isNew ? 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) : S.projId;
+    var name = $('projName').value.trim() || fileBase(S.file.name);
+    var rec = Object.assign({ id: id, name: name, saved: Date.now(), fileName: S.file.name, fileType: S.file.type, fileSize: S.file.size, seconds: S.buf.duration, keyTxt: optName('A') + ' · ' + optName('B') }, snapshot());
+    if (isNew) await dbDo('audio', 'readwrite', function (st) { return st.put(S.file, id); });
+    await dbDo('projects', 'readwrite', function (st) { return st.put(rec); });
+    S.projId = id; $('projSum').textContent = name;
+    var hm = new Date().toTimeString().slice(0, 5);
+    pmsg(quiet ? 'Guardado automáticamente a las ' + hm : 'Proyecto «' + name + '» guardado a las ' + hm + '. Los cambios siguientes se guardan solos.');
+    R.step('Proyecto guardado: ' + name + (quiet ? ' (auto)' : '')); await listProjects();
+  }
+  function touch() {
+    if (!S.projId) return; clearTimeout(autoT);
+    autoT = setTimeout(function () { saveProject(false, true).catch(function (e) { R.capture(e, 'autoguardado'); }); }, 1200);
+  }
+  async function listProjects() {
+    var all = (await dbDo('projects', 'readonly', function (st) { return st.getAll(); })) || [], box = $('projList'); box.innerHTML = '';
+    all.sort(function (a, b) { return b.saved - a.saved; }); $('projEmpty').hidden = all.length > 0;
+    all.forEach(function (p) {
+      var row = el('div', 'part proj'), dt = el('i', 'dt'); dt.style.background = p.id === S.projId ? 'var(--acc)' : 'var(--ln)';
+      var tx = el('button', 'tx', '<b>' + esc(p.name) + '</b><small>' + esc(p.keyTxt || '') + ' · ' + fmt(p.seconds, 0) + ' s · ' + esc(new Date(p.saved).toLocaleString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + '</small>');
+      tx.style.cssText = 'background:none;border:0;text-align:left;padding:0;min-height:40px'; tx.title = 'Abrir ' + p.name;
+      tx.onclick = guard('abrir proyecto', function () { return openProject(p.id); });
+      var del = el('button', 'btn small', 'Borrar'), armed = 0;
+      del.onclick = guard('borrar proyecto', async function () {
+        if (!armed) { armed = 1; del.textContent = '¿Seguro?'; del.classList.add('warn'); setTimeout(function () { armed = 0; del.textContent = 'Borrar'; del.classList.remove('warn'); }, 3000); return; }
+        await dbDo('projects', 'readwrite', function (st) { return st.delete(p.id); }); await dbDo('audio', 'readwrite', function (st) { return st.delete(p.id); });
+        if (S.projId === p.id) { S.projId = null; $('projSum').textContent = ''; } pmsg('Proyecto «' + p.name + '» borrado.'); await listProjects();
+      });
+      row.appendChild(dt); row.appendChild(tx); row.appendChild(del); box.appendChild(row);
+    });
+  }
+  async function openProject(id) {
+    pmsg('Abriendo…'); var rec = await dbDo('projects', 'readonly', function (st) { return st.get(id); }), blob = await dbDo('audio', 'readonly', function (st) { return st.get(id); });
+    if (!rec || !blob) throw new Error('Al proyecto le falta el audio guardado');
+    var f = new File([blob], rec.fileName, { type: rec.fileType || blob.type }); $('projName').value = rec.name; R.step('Abrir proyecto: ' + rec.name);
+    await loadFile(f, rec); $('secAudio').open = true; pmsg('Proyecto «' + rec.name + '» abierto.');
+  }
+  function applySaved(p) {
+    S.projId = p.id; S.analysis = p.analysis || null; S.struct = p.struct || null; S.bpmForce = p.bpmForce || null;
+    ['opt', 'bTouched', 'cur', 'preset', 'bass', 'dur', 'oct', 'kind', 'orient', 'tune', 'gate', 'style'].forEach(function (k) { if (p[k] !== undefined) S[k] = p[k]; });
+    $('dur').value = S.dur; $('durV').textContent = fmt(S.dur) + ' s'; $('oct').value = S.oct; $('kind').value = S.kind; $('orient').value = S.orient; $('gate').checked = S.gate; $('tune').checked = S.tune; $('bassSel').value = S.bass;
+    renderStyles(); renderPresets(); $('soundSum').textContent = TP.presetById(S.preset).name;
+    each('.tab', function (x) { var on = x.getAttribute('data-o') === S.cur; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    if (S.struct) { wave.setGrid(S.struct.bars, S.struct.beats); wave.setSections(S.struct.sections); renderParts(); }
+    wave.setSel(p.sel[0], p.sel[1], true); S.sel = wave.sel.slice(); syncSel(); wave.zoomSel();
+    renderOpts(); $('projSum').textContent = p.name; listProjects(); refreshAll();
+  }
+  $('projSave').onclick = guard('guardar proyecto', function () { return saveProject(false); });
+  $('projSaveNew').onclick = guard('guardar proyecto', function () { return saveProject(true); });
+  $('projExport').onclick = guard('exportar proyecto', async function () {
+    if (!S.buf) return; var name = $('projName').value.trim() || fileBase(S.file.name), rec = Object.assign({ name: name, fileName: S.file.name, fileType: S.file.type, seconds: S.buf.duration, keyTxt: optName('A') + ' · ' + optName('B') }, snapshot());
+    var audio = new Uint8Array(await S.file.arrayBuffer()), json = TP.utf8(JSON.stringify({ format: 'tonopad-project', version: 1, app: TP.VERSION, project: rec }));
+    saveBlob(TP.zip([{ name: 'project.json', data: json }, { name: 'audio/' + S.file.name, data: audio }]), name.replace(/[^\w\-. ]+/g, '_') + '.tonopad', 'application/zip'); pmsg('Descargado ' + name + '.tonopad (incluye el audio).');
+  });
+  $('projImport').onchange = guard('importar proyecto', async function () {
+    var f = this.files[0]; this.value = ''; if (!f) return;
+    var z = await TP.unzip(new Uint8Array(await f.arrayBuffer())), j = z['project.json']; if (!j) throw new Error('El archivo no es un proyecto de TonoPad');
+    var d = JSON.parse(new TextDecoder().decode(j)); if (d.format !== 'tonopad-project') throw new Error('El archivo no es un proyecto de TonoPad');
+    var rec = d.project, key = Object.keys(z).filter(function (k) { return k.indexOf('audio/') === 0; })[0]; if (!key) throw new Error('El proyecto no trae el audio');
+    var id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), blob = new Blob([z[key]], { type: rec.fileType || '' });
+    rec.id = id; rec.saved = Date.now(); await dbDo('audio', 'readwrite', function (st) { return st.put(blob, id); }); await dbDo('projects', 'readwrite', function (st) { return st.put(rec); });
+    await listProjects(); await openProject(id);
+  });
+
   // ------------------------------------------------------------ arranque
   guard('arranque', function () {
     initAudio(); TP.jobWarmup(); $('wk').textContent = '';
     buildPadEls(); renderStyles(); renderPresets(); renderOpts(); drawPads();
+    listProjects().catch(function (e) { $('projEmpty').textContent = e.message; });
     R.step('App lista'); R.setStage('inicio', 'esperando', 0);
     refreshAll();
     setTimeout(function () { $('wk').textContent = 'proceso: ' + TP.workerMode; }, 800);

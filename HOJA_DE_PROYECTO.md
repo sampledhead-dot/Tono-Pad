@@ -22,6 +22,7 @@ AudioContext creado al arrancar (`latencyHint:interactive`) y reanudado en el pr
 
 ## Historial
 - v1: primera versión (una región, 2 disposiciones A/B).
+- v7: **proyectos guardados** en el navegador (IndexedDB: audio, región, partes, análisis, escalas A/B, sonidos y ajustes), autoguardado tras el primer «Guardar», abrir/borrar, y exportar/importar a archivo `.tonopad` (ZIP con `project.json` + el audio) para pasar de un dispositivo a otro.
 - v6: pads tocables con controlador MIDI (Web MIDI: por pad desde una nota inicial o por coincidencia de nota; velocidad opcional) y letras del teclado visibles en los pads.
 - v5: arreglo de instalación en el móvil: iconos PNG 192/512 (+maskable) en el manifest, apple-touch-icon y metas iOS (Chrome Android no instala con icono solo SVG).
 - v4: la app se entrega en 3 archivos (`index.html` con CSS y JS dentro, `manifest.webmanifest`, `sw.js`), como las demás. El código fuente por módulos vive en `src/` y `build.py` lo compila.
@@ -41,5 +42,6 @@ Entrega numerada `tonopad-vN.zip` + standalone; versión en el pie; informe de e
 - Probado solo con canciones sintéticas (no hay música real en el entorno de pruebas). La precisión con música real está por validar.
 - Tempo: puede salir al doble/mitad (botones ½×/2×). «Puente» y «solo» se unifican.
 - Move, Live y SP-404 no se han probado en los equipos/programas reales; se validó la estructura de los archivos (JSON/XML/ZIP/WAV). MPC: solo WAV ordenados (sin .xpm).
+- Los proyectos viven en el almacenamiento del navegador de cada dispositivo (se pierden si se borran los datos del sitio): para conservarlos, exportar a `.tonopad`. No se guardan las muestras generadas, se regeneran al abrir.
 - MIDI: solo Chrome/Edge/Firefox de ordenador y con https; probado únicamente con mensajes simulados, no con un controlador real.
 - Latencia con Bluetooth no controlable. No probado en iOS/Safari.
