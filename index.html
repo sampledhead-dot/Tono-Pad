@@ -141,6 +141,8 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 .bar input{width:96px;flex:none}
 @media (min-width:900px){.bar{left:50%;right:auto;transform:translateX(-50%);width:760px;border-radius:14px 14px 0 0;border:1px solid var(--ln);border-bottom:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.pad .kb{position:absolute;right:8px;bottom:6px;font:600 10px ui-monospace,Menlo,monospace;opacity:.45;text-transform:uppercase}
+@media (hover:none){.pad .kb{display:none}}
 </style>
 </head>
 <body>
@@ -277,7 +279,16 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
           <option value="p1">Grave en el pad 1 (numeración SP-404)</option>
           <option value="mpc">Grave abajo-izquierda (MPC / Move)</option></select></label>
           <label class="check"><input type="checkbox" id="gate"> Cortar al soltar</label></div>
-        <p class="hint">Teclado: <kbd>1234</kbd> <kbd>QWER</kbd> <kbd>ASDF</kbd> <kbd>ZXCV</kbd> = filas de arriba abajo.</p>
+      </details>
+      <details class="sub" id="ctlBox"><summary>Teclado y controlador MIDI</summary>
+        <p class="hint">Teclado del ordenador: <kbd>1234</kbd> <kbd>QWER</kbd> <kbd>ASDF</kbd> <kbd>ZXCV</kbd> = filas de arriba abajo (la letra sale en cada pad).</p>
+        <button class="btn wide" id="midiBtn">Activar controlador MIDI</button>
+        <p class="hint" id="midiSt">Funciona en Chrome, Edge y Firefox de ordenador (no en Safari). Conecta el controlador antes de activarlo.</p>
+        <div class="row"><label class="f grow">Qué toca cada nota MIDI<select id="midiMode">
+          <option value="pad">Por pad: notas consecutivas desde la inicial (como SP/MPC, abajo-izquierda primero)</option>
+          <option value="note">Por nota: la nota MIDI que coincide con la del pad</option></select></label>
+          <label class="f" id="midiBaseF">Nota inicial<select id="midiBase"><option value="36" selected>36 · C1 (SP-404 / MPC)</option><option value="48">48 · C2</option><option value="60">60 · C3</option><option value="0">0</option></select></label></div>
+        <label class="check"><input type="checkbox" id="midiVel" checked> La velocidad (fuerza) controla el volumen</label>
       </details>
     </div>
   </details>
@@ -323,7 +334,7 @@ footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:cen
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v5';
+  TP.VERSION = 'v6';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -1970,7 +1981,7 @@ function adgRack(items){
 
   R.setProvider(function () {
     return {
-      options: { opcionA: S.opt.A, opcionB: S.opt.B, activa: S.cur, sonido: S.preset, sonidoBajo: S.bass, duracion: S.dur, octava: S.oct, reparto: S.kind, disposicion: S.orient, afinarACancion: S.tune, cortarAlSoltar: S.gate, estilo: S.style, seleccion: S.sel, bpmForzado: S.bpmForce, workers: TP.workerMode, sampleRateAudio: sr, latencia: lat.slice(-10) },
+      options: { opcionA: S.opt.A, opcionB: S.opt.B, activa: S.cur, sonido: S.preset, sonidoBajo: S.bass, duracion: S.dur, octava: S.oct, reparto: S.kind, disposicion: S.orient, afinarACancion: S.tune, cortarAlSoltar: S.gate, estilo: S.style, seleccion: S.sel, bpmForzado: S.bpmForce, workers: TP.workerMode, midi: midi.names, sampleRateAudio: sr, latencia: lat.slice(-10) },
       file: S.file ? { nombre: S.file.name, tamano: S.file.size, tipo: S.file.type, duracion: S.buf ? S.buf.duration : null, canales: S.buf ? S.buf.numberOfChannels : null, frecuencia: S.buf ? S.buf.sampleRate : null } : null,
       result: S.analysis ? { mejor: S.analysis.best, confianza: S.analysis.confidence, afinacionCents: S.analysis.tuningCents, candidatos: S.analysis.candidates, croma: S.analysis.chroma, cromaBajo: S.analysis.bassChroma, estructura: S.struct ? { bpm: S.struct.bpm, partes: S.struct.sections.map(function (s) { return [s.label, +s.start.toFixed(2), +s.end.toFixed(2)]; }) } : null } : (S.struct ? { estructura: { bpm: S.struct.bpm, partes: S.struct.sections.length } } : null)
     };
@@ -2292,6 +2303,7 @@ function adgRack(items){
     var k = S.opt[o], lay = TP.buildLayout(k.tonic, k.scale, S.oct, S.kind);
     return TP.padsFromSlots(lay, S.orient).map(function (p) { return { midi: p.midi, zone: p.zone, root: p.root, preset: p.zone === 'bass' ? S.bass : S.preset }; });
   }
+  var KEYS = '1234qwerasdfzxcv', midi = { access: null, base: 36, mode: 'pad', vel: true, names: [] };
   var ZONES = { scale: 'escala', bass: 'bajo', chord: 'acordes', lead: 'lead' };
   function buildPadEls() {
     var box = $('pads');
@@ -2306,12 +2318,12 @@ function adgRack(items){
     })(i);
   }
   /* Camino corto: nada de crear nodos extra ni tocar el DOM antes de lanzar el sonido */
-  function padDown(i, ts) {
+  function padDown(i, ts, vel) {
     var buf = padBufs[i]; if (!buf || !ctx) return;
     if (ctx.state !== 'running') ctx.resume();
     var t0 = performance.now(), prev = padVoices[i];
     if (prev) { try { prev.g.gain.setTargetAtTime(0, ctx.currentTime, 0.004); prev.s.stop(ctx.currentTime + 0.03); } catch (e) { } }
-    var g = ctx.createGain(), s = ctx.createBufferSource(); s.buffer = buf; s.connect(g); g.connect(master); s.start();
+    var g = ctx.createGain(), s = ctx.createBufferSource(); s.buffer = buf; if (vel && midi.vel) g.gain.value = 0.2 + 0.8 * vel / 127; s.connect(g); g.connect(master); s.start();
     padVoices[i] = { s: s, g: g };
     s.onended = function () { if (padVoices[i] && padVoices[i].s === s) { padVoices[i] = null; } padEls[i].classList.remove('hit'); };
     padEls[i].classList.add('hit');
@@ -2325,19 +2337,45 @@ function adgRack(items){
     $('latInfo').textContent = 'Latencia: interfaz ' + fmt(ui) + ' ms (pico ' + fmt(mx) + ') · audio ' + fmt((out + base) * 1000, 0) + ' ms' + (out === 0 ? ' (el navegador no informa de la salida)' : '') + '. Con auriculares Bluetooth se añaden 100–200 ms que la app no controla.';
   }
   function padUp(i) { var v = padVoices[i]; if (S.gate && v && ctx) { try { v.g.gain.setTargetAtTime(0, ctx.currentTime, 0.02); v.s.stop(ctx.currentTime + 0.1); } catch (e) { } padVoices[i] = null; } if (S.gate || !v) padEls[i].classList.remove('hit'); }
-  var KEYS = '1234qwerasdfzxcv';
   window.addEventListener('keydown', function (e) {
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
     var i = KEYS.indexOf(e.key.toLowerCase()); if (i >= 0) { e.preventDefault(); padDown(i); }
   });
   window.addEventListener('keyup', function (e) { var i = KEYS.indexOf(e.key.toLowerCase()); if (i >= 0) padUp(i); });
 
+  /* ---------- controlador MIDI (Web MIDI) ---------- */
+  function midiPad(n) {
+    if (midi.mode === 'pad') { var k = n - midi.base; return k < 0 || k > 15 ? -1 : (3 - (k >> 2)) * 4 + (k & 3); }   // 1.ª fila de abajo = notas base..base+3
+    var pads = padsFor(S.cur), best = -1, bd = 99, i;
+    for (i = 0; i < 16; i++) if (pads[i].midi === n) return i;
+    for (i = 0; i < 16; i++) if ((pads[i].midi - n) % 12 === 0 || (n - pads[i].midi) % 12 === 0) { var d = Math.abs(pads[i].midi - n); if (d < bd) { bd = d; best = i; } }
+    return best;                                                     // misma nota en otra octava
+  }
+  function midiMsg(d) {
+    var st = d[0] & 0xF0, i = midiPad(d[1]); if (i < 0) return;
+    if (st === 0x90 && d[2] > 0) padDown(i, 0, d[2]); else if (st === 0x80 || st === 0x90) padUp(i);
+  }
+  TP._midiMsg = midiMsg;
+  function midiBind() {
+    var a = midi.access; if (!a) return; midi.names = [];
+    a.inputs.forEach(function (inp) { inp.onmidimessage = function (e) { midiMsg(e.data); }; midi.names.push(inp.name || inp.id); });
+    $('midiSt').textContent = midi.names.length ? 'Conectado: ' + midi.names.join(', ') + '. Toca una nota en el controlador.' : 'MIDI activado, pero no hay ningún controlador conectado. Conéctalo y se detectará solo.';
+    R.step('MIDI: ' + (midi.names.join(', ') || 'sin entradas'));
+  }
+  $('midiBtn').onclick = guard('MIDI', function () {
+    if (!navigator.requestMIDIAccess) { $('midiSt').textContent = 'Este navegador no admite MIDI web. Usa Chrome, Edge o Firefox en el ordenador.'; return; }
+    return navigator.requestMIDIAccess({ sysex: false }).then(function (a) { midi.access = a; a.onstatechange = midiBind; midiBind(); $('midiBtn').textContent = 'MIDI activado'; }, function (e) { $('midiSt').textContent = 'No se ha podido activar el MIDI (' + ((e && e.message) || e) + '). Comprueba el permiso del navegador y que la página sea https.'; });
+  });
+  $('midiMode').onchange = function () { midi.mode = this.value; $('midiBaseF').style.display = midi.mode === 'pad' ? '' : 'none'; };
+  $('midiBase').onchange = function () { midi.base = parseInt(this.value, 10); };
+  $('midiVel').onchange = function () { midi.vel = this.checked; };
+
   function drawPads() {
     var pads = padsFor(S.cur), k = S.opt[S.cur], flats = TP.useFlats(k.tonic, k.scale), zones = {};
     document.body.setAttribute('data-o', S.cur);
     pads.forEach(function (p, i) {
       var b = padEls[i]; zones[p.zone] = 1; b.className = 'pad z-' + p.zone + (padBufs[i] ? ' ready' : '');
-      b.innerHTML = '<span class="pn">' + (i + 1) + '</span><span class="nn">' + TP.midiName(p.midi, flats) + '</span>' + (p.root ? '<span class="rt"></span>' : '');
+      b.innerHTML = '<span class="pn">' + (i + 1) + '</span><span class="nn">' + TP.midiName(p.midi, flats) + '</span><span class="kb">' + KEYS[i] + '</span>' + (p.root ? '<span class="rt"></span>' : '');
       b.setAttribute('aria-label', 'Pad ' + (i + 1) + ', ' + TP.midiName(p.midi, flats) + ', ' + ZONES[p.zone]);
     });
     var col = { scale: S.cur === 'A' ? 'var(--acc)' : 'var(--vio)', bass: 'var(--acc)', chord: 'var(--amb)', lead: 'var(--pink)' };
