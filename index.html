@@ -1465,6 +1465,23 @@ function tpSynth(root) {
 
   TP.PRESETS = [
     // ---- leads ----
+    // ---- theremin (variedades) ----
+    { id: 'th_classic', name: 'Theremin Clásico', cat: 'lead', styles: ['darkwave', 'nusoul', 'electro'], desc: 'Seno puro con vibrato lento y entrada deslizada',
+      oscs: [{ w: 'sin' }, { w: 'sin', oct: 1, lvl: 0.12 }], penv: { semi: -1.6, t: 0.11 }, amp: { a: 0.1, d: 0.6, s: 1, r: 0.25 }, vib: { rate: 5.4, depth: 24, delay: 0.25 } },
+    { id: 'th_etherwave', name: 'Theremin Etherwave', cat: 'lead', styles: ['electro', 'darkwave', 'bigbeat'], desc: 'Más cuerpo: triángulo y seno, tipo Moog',
+      oscs: [{ w: 'tri' }, { w: 'sin', lvl: 0.6 }], filt: { cut: 1900, key: 0.5, env: 0, res: 0.15 }, penv: { semi: -1.2, t: 0.09 }, amp: { a: 0.08, d: 0.5, s: 1, r: 0.22 }, vib: { rate: 5, depth: 32, delay: 0.2 } },
+    { id: 'th_scifi', name: 'Theremin Ciencia Ficción', cat: 'lead', styles: ['darkwave', 'epunk', 'bigbeat'], desc: 'Vibrato ancho y caída de película de serie B',
+      oscs: [{ w: 'sin' }, { w: 'sin', det: 14, lvl: 0.5 }], penv: { semi: -4, t: 0.28 }, amp: { a: 0.14, d: 0.6, s: 1, r: 0.3 }, vib: { rate: 6.6, depth: 62, delay: 0.12 }, chorus: { mix: 0.35, depth: 3, rate: 0.6 } },
+    { id: 'th_voice', name: 'Theremin Voz', cat: 'lead', styles: ['nusoul', 'darkwave'], desc: 'Casi soprano: seno con formante y temblor',
+      oscs: [{ w: 'sin' }, { w: 'saw', lvl: 0.28 }], filt: { cut: 1400, key: 0.6, env: 0, res: 0.4 }, penv: { semi: -1.8, t: 0.1 }, amp: { a: 0.12, d: 0.6, s: 1, r: 0.3 }, vib: { rate: 5.8, depth: 40, delay: 0.18 }, trem: { rate: 5.8, depth: 0.12 } },
+    { id: 'th_dark', name: 'Theremin Oscuro', cat: 'lead', styles: ['darkwave', 'punk', 'epunk'], desc: 'Cuadrada filtrada con chorus, frío y tenso',
+      oscs: [{ w: 'sq', pw: 0.5 }, { w: 'sin', lvl: 0.5 }], filt: { cut: 950, key: 0.4, env: 0, res: 0.25 }, penv: { semi: -2.2, t: 0.14 }, amp: { a: 0.06, d: 0.5, s: 1, r: 0.25 }, vib: { rate: 4.6, depth: 22, delay: 0.3 }, chorus: { mix: 0.5, depth: 3, rate: 0.5 }, drive: 0.15 },
+    { id: 'th_8bit', name: 'Theremin 8-bit', cat: 'lead', styles: ['8bit', 'epunk'], desc: 'Pulso estrecho con vibrato, a 6 bits',
+      oscs: [{ w: 'sq', pw: 0.25 }], penv: { semi: -1.5, t: 0.08 }, amp: { a: 0.04, d: 0.3, s: 1, r: 0.1 }, vib: { rate: 6.2, depth: 34, delay: 0.15 }, crush: { bits: 6, hold: 2 } },
+    { id: 'th_wobble', name: 'Theremin Wobble', cat: 'lead', styles: ['electro', 'bigbeat', 'ukg'], desc: 'Vibrato exagerado, casi sirena',
+      oscs: [{ w: 'sin' }, { w: 'tri', lvl: 0.3 }], penv: { semi: -3, t: 0.2 }, amp: { a: 0.05, d: 0.5, s: 1, r: 0.2 }, vib: { rate: 7.6, depth: 120, delay: 0.08 } },
+    { id: 'th_pad', name: 'Theremin Pad Etéreo', cat: 'pad', styles: ['darkwave', 'nusoul', 'electro'], desc: 'Capas de seno y sierra suave, lento y flotante',
+      oscs: [{ w: 'sin', uni: 3, spread: 10 }, { w: 'saw', uni: 3, spread: 12, lvl: 0.18 }], filt: { cut: 1300, key: 0.4, env: 0, res: 0.1 }, penv: { semi: -1, t: 0.3 }, amp: { a: 0.5, d: 0.6, s: 1, r: 0.6 }, vib: { rate: 4.8, depth: 28, delay: 0.4 }, chorus: { mix: 0.5, depth: 4, rate: 0.4 } },
     { id: 'punk_saw', name: 'Sierra Punk', cat: 'lead', styles: ['punk', 'epunk', 'bigbeat'], desc: 'Dos sierras desafinadas con saturación',
       oscs: [{ w: 'saw', det: -9 }, { w: 'saw', det: 9 }, { w: 'sq', oct: -1, lvl: 0.4 }], filt: { cut: 2600, key: 0.4, env: 1.2, d: 0.5, s: 0.5, res: 0.25 }, amp: { a: 0.003, d: 0.4, s: 0.85, r: 0.12 }, drive: 0.75 },
     { id: 'chip_pulse', name: 'Pulso 8-bit', cat: 'lead', styles: ['8bit', 'epunk'], desc: 'Onda cuadrada al 25 % con vibrato, tipo consola',
