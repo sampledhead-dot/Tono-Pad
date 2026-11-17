@@ -298,8 +298,8 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
     <div class="in">
       <p class="hint">Sube un bajo, una guitarra, un teclado… de una nota o de varias (una melodía o escala). Se detecta la nota de cada trozo (chop) y se usan como base de los pads; las notas que falten se sacan subiendo o bajando el chop más cercano. Funciona con <b>una sola voz</b> (no con acordes ni rasgueos).</p>
       <label class="drop" id="smpDrop">
-        <input type="file" id="smpFile" accept="audio/*,.wav,.mp3,.m4a,.aac,.ogg,.flac,.aif,.aiff">
-        <span id="smpDropTxt"><b>Elige o arrastra una muestra</b><br><small>Cuanto más limpia (sin música de fondo), mejor se detecta.</small></span>
+        <input type="file" id="smpFile" multiple accept="audio/*,.wav,.mp3,.m4a,.aac,.ogg,.flac,.aif,.aiff">
+        <span id="smpDropTxt"><b>Elige o arrastra una o varias muestras</b><br><small>Varias notas sueltas (un archivo por nota) también valen. Cuanto más limpia (sin música de fondo), mejor se detecta.</small></span>
       </label>
       <div class="prog" id="smpProg" hidden><i></i><span></span></div>
       <div id="smpBox" hidden>
@@ -382,7 +382,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
         <div class="row"><label class="f grow">Posición de los graves<select id="orient">
           <option value="p1">Grave en el pad 1 (numeración SP-404)</option>
           <option value="mpc">Grave abajo-izquierda (MPC / Move)</option></select></label>
-          <label class="check"><input type="checkbox" id="gate"> Cortar al soltar</label></div>
+          <label class="check"><input type="checkbox" id="gate" checked> Gate: suena solo mientras pulsas</label></div>
       </details>
       <details class="sub" id="ctlBox"><summary>Teclado y controlador MIDI</summary>
         <p class="hint">Teclado del ordenador: <kbd>1234</kbd> <kbd>QWER</kbd> <kbd>ASDF</kbd> <kbd>ZXCV</kbd> = filas de arriba abajo (la letra sale en cada pad).</p>
@@ -1991,6 +1991,7 @@ function adgRack(items){
       '1) Copia la carpeta PROJECT de este zip en la raíz de la tarjeta SD (si ya tienes una carpeta PROJECT, se mezclan; solo se pisa un proyecto si usa el mismo número Pnn).',
       '2) Pon la SD en la SP-404MKII y abre el proyecto desde el selector de proyectos de la SP.',
       '3) Banco A = escala A, banco B = escala B, cada pad con su nota (el LEEME.txt trae la lista).',
+      'Modo del pad: TonoPad NO escribe todavía el modo GATE en el proyecto (no se ha localizado ese campo): ponlos en GATE desde la SP. En la app los pads ya suenan en gate.',
       'Importante: este formato está deducido de un proyecto real, sin documentación oficial. Haz copia de la SD antes de probarlo.'],
     sp404: [
       '1) Copia la carpeta IMPORT de este zip dentro de la carpeta IMPORT de la tarjeta SD (la SD formateada en la propia SP-404MKII).',
@@ -2431,7 +2432,7 @@ function adgRack(items){
     anB: null, zone: { A: null, B: null }, bMode: 'alt',
     file: null, buf: null, mono: null, sel: [0, 0], analysis: null, struct: null, bpmForce: null,
     opt: { A: { tonic: 9, scale: 'minor' }, B: { tonic: 9, scale: 'dorian' } }, bTouched: false, cur: 'A',
-    preset: 'punk_saw', bass: 'moog', dur: 3, oct: 0, kind: 'ladder', orient: 'p1', tune: true, gate: false, style: 'all',
+    preset: 'punk_saw', bass: 'moog', dur: 3, oct: 0, kind: 'ladder', orient: 'p1', tune: true, gate: true, style: 'all',
     src: { A: { top: 'global', bot: 'global' }, B: { top: 'global', bot: 'global' } }, sample: null, songName: '', nameOn: true, nameFor: 'sp404p'
   };
   var ctx = null, master = null, sr = 48000, songSrc = null, songGain = null, songT0 = 0, songRaf = 0;
@@ -2789,7 +2790,7 @@ function adgRack(items){
     var c = sm.chops[sm.sel]; $('smCard').hidden = !c;
     if (c) {
       $('smNote').textContent = noteTxt(c); $('smOn').textContent = c.on === false ? 'Usar' : 'Quitar';
-      $('smInfo').textContent = (c.midi ? (centsOf(c) >= 0 ? '+' : '−') + Math.abs(centsOf(c)) + ' cents · confianza ' + Math.round(c.conf * 100) + ' %' : 'no se detecta una nota') + ' · ' + fmt(c.end - c.start, 2) + ' s';
+      $('smInfo').textContent = (c.midi ? (centsOf(c) >= 0 ? '+' : '−') + Math.abs(centsOf(c)) + ' cents · confianza ' + Math.round(c.conf * 100) + ' %' : 'no se detecta una nota') + ' · ' + fmt(c.end - c.start, 2) + ' s' + (c.name ? ' · ' + c.name : '');
       $('smWarn').textContent = !c.midi ? 'No se detecta una altura clara (¿ruido, golpe, varias notas a la vez?). Puedes ponerle la nota a mano con los botones de semitono.' : c.conf < 0.5 ? 'Poca confianza: puede haber varias notas o ruido. Compruébalo de oído (▶) y corrige con −½ / +½ / 8ª si hace falta.' : '';
     }
     var used = sm.chops.filter(function (x) { return x.on !== false && x.midi; });
@@ -2813,16 +2814,44 @@ function adgRack(items){
     try { buf = await decodeFile(ab); } catch (e) { $('smpDropTxt').innerHTML = '<b>No se ha podido leer esa muestra</b><br><small>Prueba con WAV o MP3.</small>'; throw new Error('No se pudo decodificar la muestra: ' + ((e && e.message) || e)); }
     var nc = buf.numberOfChannels, n = Math.min(buf.length, Math.floor(buf.sampleRate * 90)), mono = new Float32Array(n), c, i;
     for (c = 0; c < nc; c++) { var d = buf.getChannelData(c); for (i = 0; i < n; i++) mono[i] += d[i] / nc; }
-    S.sample = { file: f, mono: mono, sr: buf.sampleRate, dur: n / buf.sampleRate, chops: [], sel: -1, ver: 0, sens: saved ? saved.sens || 9 : 9, tope: saved ? saved.tope || 5 : 5, fine: saved ? saved.fine !== false : true, storedFor: saved ? S.projId : null };
+    S.sample = { file: f, mono: mono, sr: buf.sampleRate, dur: n / buf.sampleRate, chops: [], sel: -1, ver: 0, sens: saved ? saved.sens || 9 : 9, tope: saved ? saved.tope || 5 : 5, fine: saved ? saved.fine !== false : true, storedFor: null };
     chopView.setAudio(mono, buf.sampleRate); $('smpBox').hidden = false; chopView.resize();
     $('smpDropTxt').innerHTML = '<b>' + esc(f.name) + '</b><br><small>' + fmt(S.sample.dur) + ' s' + (buf.length > n ? ' (se usan los primeros 90 s)' : '') + ' · toca para cambiar de muestra</small>';
     if (saved && saved.chops) { S.sample.chops = saved.chops; S.sample.sel = saved.chops.length ? 0 : -1; smUi(); } else await detectChops(false);
     R.setStage('muestra', 'lista', 1); if (!($('songName').value)) songNameAuto();
   }
-  $('smpFile').addEventListener('change', guard('cargar muestra', function () { if (this.files[0]) return loadSample(this.files[0]); }));
+  /* Varios archivos (una nota por archivo, o varias): se juntan en una sola muestra con un hueco entre ellos y cada archivo se trocea por separado */
+  async function loadSamples(files) {
+    files = Array.prototype.slice.call(files).sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+    if (files.length === 1) return loadSample(files[0]);
+    wake(); R.step('Muestras múltiples: ' + files.length + ' archivos'); var parts = [], rate = 0, total = 0, gap = 0.25, i, j;
+    $('smpDropTxt').innerHTML = '<b>' + files.length + ' archivos</b><br><small>Leyendo…</small>';
+    for (i = 0; i < files.length; i++) {
+      setProg('smpProg', i / files.length / 2, 'Leyendo ' + (i + 1) + '/' + files.length); await tick();
+      var buf; try { buf = await decodeFile(await files[i].arrayBuffer()); } catch (e) { setProg('smpProg', null); throw new Error('No se pudo decodificar ' + files[i].name); }
+      if (!rate) rate = buf.sampleRate;
+      var n = Math.min(buf.length, Math.floor(buf.sampleRate * 20)), m = new Float32Array(n), c, k; for (c = 0; c < buf.numberOfChannels; c++) { var d = buf.getChannelData(c); for (k = 0; k < n; k++) m[k] += d[k] / buf.numberOfChannels; }
+      if (buf.sampleRate !== rate) { var r = buf.sampleRate / rate, n2 = Math.floor(n / r), m2 = new Float32Array(n2); for (k = 0; k < n2; k++) { var q = k * r, q0 = Math.floor(q), f = q - q0; m2[k] = m[q0] * (1 - f) + (m[Math.min(n - 1, q0 + 1)]) * f; } m = m2; }
+      parts.push({ name: files[i].name, mono: m }); total += m.length + Math.floor(gap * rate);
+    }
+    var all = new Float32Array(total), off = 0, chops = [];
+    for (i = 0; i < parts.length; i++) {
+      var pt = parts[i], cl = TP.pitch.chops(pt.mono, rate, { sens: 9 }); if (!cl.length) cl = [{ start: 0, end: Math.min(pt.mono.length / rate, 8) }];
+      all.set(pt.mono, off);
+      cl.forEach(function (cc) { var dd = TP.pitch.detect(pt.mono, rate, cc.start, cc.end), o2 = off / rate; chops.push({ start: cc.start + o2, end: cc.end + o2, midi: dd.midi, conf: dd.conf, on: dd.midi > 0 && dd.conf >= 0.25, name: pt.name }); });
+      off += pt.mono.length + Math.floor(gap * rate); setProg('smpProg', 0.5 + (i + 1) / parts.length / 2, 'Notas ' + (i + 1) + '/' + parts.length); await tick();
+    }
+    setProg('smpProg', null);
+    var wavBytes = TP.wav16(all, null, rate), f = new File([wavBytes], 'muestras_' + files.length + '_archivos.wav', { type: 'audio/wav' });
+    await loadSample(f, { chops: chops, sens: 9, tope: 5, fine: true }); S.sample.storedFor = null;
+    $('smpDropTxt').innerHTML = '<b>' + files.length + ' archivos</b><br><small>' + chops.length + ' notas · toca para cambiar</small>'; smChanged();
+    R.step('Muestras múltiples: ' + chops.map(function (c) { return (c.name || '') + '=' + noteTxt(c); }).join(' '));
+  }
+  loadSamples = guard('cargar muestras', loadSamples);
+  $('smpFile').addEventListener('change', function () { if (this.files.length) { var fl = this.files; loadSamples(fl); } });
   ['dragenter', 'dragover'].forEach(function (ev) { $('smpDrop').addEventListener(ev, function (e) { e.preventDefault(); $('smpDrop').classList.add('over'); }); });
   ['dragleave', 'drop'].forEach(function (ev) { $('smpDrop').addEventListener(ev, function (e) { e.preventDefault(); $('smpDrop').classList.remove('over'); }); });
-  $('smpDrop').addEventListener('drop', guard('soltar muestra', function (e) { var f = e.dataTransfer.files[0]; if (f) return loadSample(f); }));
+  $('smpDrop').addEventListener('drop', function (e) { if (e.dataTransfer.files.length) loadSamples(e.dataTransfer.files); });
   function cutAt(t) {
     var sm = S.sample; if (!sm) return;
     for (var i = 0; i < sm.chops.length; i++) { var c = sm.chops[i]; if (t > c.start + 0.03 && t < c.end - 0.03) {
@@ -3183,7 +3212,7 @@ function adgRack(items){
     return {
       sel: S.sel.slice(), opt: JSON.parse(JSON.stringify(S.opt)), bTouched: S.bTouched, cur: S.cur, preset: S.preset, bass: S.bass, dur: S.dur, oct: S.oct, kind: S.kind, orient: S.orient, tune: S.tune, gate: S.gate, style: S.style, bpmForce: S.bpmForce,
       analysis: serAn(A), anB: serAn(S.anB), zone: S.zone, bMode: S.bMode, src: JSON.parse(JSON.stringify(S.src)), songName: $('songName').value, nameOn: $('nameOn').checked, nameFor: S.nameFor,
-      sample: S.sample ? { name: S.sample.file ? S.sample.file.name : '', type: S.sample.file ? S.sample.file.type : '', sens: S.sample.sens, tope: S.sample.tope, fine: S.sample.fine, chops: S.sample.chops.map(function (c) { return { start: c.start, end: c.end, midi: c.midi, conf: c.conf, on: c.on !== false }; }) } : null,
+      sample: S.sample ? { name: S.sample.file ? S.sample.file.name : '', type: S.sample.file ? S.sample.file.type : '', sens: S.sample.sens, tope: S.sample.tope, fine: S.sample.fine, chops: S.sample.chops.map(function (c) { return { start: c.start, end: c.end, midi: c.midi, conf: c.conf, on: c.on !== false, name: c.name || '' }; }) } : null,
       struct: st ? { bpm: st.bpm, bars: Array.from(st.bars), beats: Array.from(st.beats), sections: st.sections.map(function (x) { return { start: x.start, end: x.end, label: x.label, cluster: x.cluster, startBar: x.startBar, endBar: x.endBar, nBars: x.nBars, loopBars: x.loopBars }; }) } : null
     };
   }
@@ -3231,7 +3260,7 @@ function adgRack(items){
     if (!rec || !blob) throw new Error('Al proyecto le falta el audio guardado');
     var f = new File([blob], rec.fileName, { type: rec.fileType || blob.type }); $('projName').value = rec.name; R.step('Abrir proyecto: ' + rec.name);
     await loadFile(f, rec);
-    if (rec.sample) { var sb = await dbDo('audio', 'readonly', function (st) { return st.get(id + '#s'); }); if (sb) { await loadSample(new File([sb], rec.sample.name || 'muestra', { type: rec.sample.type || sb.type }), rec.sample); smUi(); drawPads(); refreshAll(); } }
+    if (rec.sample) { var sb = await dbDo('audio', 'readonly', function (st) { return st.get(id + '#s'); }); if (sb) { await loadSample(new File([sb], rec.sample.name || 'muestra', { type: rec.sample.type || sb.type }), rec.sample); S.sample.storedFor = id; smUi(); drawPads(); refreshAll(); } }
     $('secAudio').open = true; pmsg('Proyecto «' + rec.name + '» abierto.');
   }
   $('projNew').onclick = guard('nuevo proyecto', async function () {
