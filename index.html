@@ -109,14 +109,60 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
 .pre b{display:block;font-size:14px}.pre small{display:block;color:var(--mu);font-size:11.5px;line-height:1.3;margin-top:3px}
 .pre .cat{font:700 10px ui-monospace,Menlo,monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--amb)}
 .pre .cat.c-bass{color:var(--acc)}.pre .cat.c-lead{color:var(--pink)}.pre .cat.c-pad{color:var(--vio)}.pre .cat.c-fuzz{color:#ef7a22}
+
+/* ---- pestaña Efectos FuzzHead: mismo aspecto que la app FuzzHead ---- */
+#secFx>.in{padding:0}
+#fhUI{--fh-bg:#17130f;--fh-plate:#f3efe9;--fh-plate2:#e8e2d9;--fh-line:#d6cec2;--fh-ink:#111;--fh-ink2:#2b2622;--fh-muted:#6f675e;--fh-or:#d9600b;--fh-orl:#ef7a22;--fh-ord:#a94a07;
+  --fh-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--fh-heavy:"Arial Black","Helvetica Neue",Impact,system-ui,sans-serif;
+  color:var(--fh-ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px;border-radius:0 0 12px 12px;overflow:hidden;
+  background:radial-gradient(circle at 50% -160px,var(--fh-or) 0 330px,transparent 331px),radial-gradient(circle at 15% 40%,rgba(217,96,11,.08),transparent 40%),var(--fh-bg);background-repeat:no-repeat}
+#fhUI *{box-sizing:border-box}
+#fhUI .fh-head{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px 0 18px}
+#fhUI .fh-logo{display:flex;align-items:center;gap:14px}
+#fhUI .fh-ico{width:64px;height:64px;flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+#fhUI .fh-word{position:relative;display:inline-block;transform:rotate(-3deg)}
+#fhUI .fh-word b{font-family:var(--fh-heavy);font-weight:900;font-size:50px;letter-spacing:-.02em;line-height:1;color:var(--fh-ink);-webkit-text-stroke:3px var(--fh-plate);paint-order:stroke fill;
+  text-shadow:0 0 0 var(--fh-plate),5px 5px 0 var(--fh-ink2),-2px -2px 0 var(--fh-plate);font-style:italic;display:inline-block}
+#fhUI .fh-word b:nth-child(2){transform:translateY(5px) rotate(4deg);margin-left:-4px}
+#fhUI .fh-drips{position:absolute;left:6%;top:96%;width:88%;height:26px;overflow:visible}
+#fhUI .fh-tag{background:var(--fh-ink);color:var(--fh-plate);font-family:var(--fh-heavy);font-size:11px;letter-spacing:.25em;text-transform:uppercase;padding:5px 10px;border-radius:3px;transform:rotate(1deg)}
+#fhUI .fh-seg{display:inline-flex;background:var(--fh-ink);border-radius:6px;padding:3px;gap:3px}
+#fhUI .fh-seg button{background:transparent;border:0;color:var(--fh-plate);padding:7px 14px;border-radius:4px;font:inherit;font-weight:800;cursor:pointer;letter-spacing:.03em;min-height:0}
+#fhUI .fh-seg button.on{background:var(--fh-or);color:var(--fh-ink)}
+#fhUI .fh-card,#fhUI .fh-mod{background:var(--fh-plate);border-radius:8px;padding:16px;margin-bottom:12px;position:relative;box-shadow:0 2px 0 var(--fh-line) inset,0 6px 0 rgba(0,0,0,.35)}
+#fhUI .fh-card::before,#fhUI .fh-card::after,#fhUI .fh-mod::after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--fh-ord);opacity:.7}
+#fhUI .fh-card::before{top:8px;left:8px}#fhUI .fh-card::after{bottom:8px;right:8px}#fhUI .fh-mod::after{bottom:8px;left:8px}
+#fhUI .fh-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#fhUI .fh-btn{background:var(--fh-ink);color:var(--fh-plate);border:0;border-radius:6px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+#fhUI .fh-btn.sm{padding:5px 10px;min-height:32px;font-size:13px}
+#fhUI .fh-muted{color:var(--fh-muted)}
+#fhUI .fh-status{font-size:13px;color:var(--fh-muted);margin-top:8px}
+#fhUI .fh-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+#fhUI .fh-mod{display:flex;flex-direction:column;gap:12px;margin-bottom:0}
+#fhUI .fh-mod.off .fh-knobs,#fhUI .fh-mod.off .fh-opts{opacity:.35}
+#fhUI .fh-mod h3{margin:0;font-family:var(--fh-heavy);font-size:14px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--fh-ink)}
+#fhUI .fh-mod h3 .ttl{display:flex;align-items:center;gap:8px}
+#fhUI .fh-mod h3 .nm{background:var(--fh-ink);color:var(--fh-plate);padding:3px 9px 4px;border-radius:3px;transform:rotate(-1.5deg);display:inline-block}
+#fhUI .fh-sw{width:46px;height:26px;min-height:0;border-radius:999px;background:var(--fh-plate2);border:2px solid var(--fh-ink);position:relative;cursor:pointer;flex:none;padding:0}
+#fhUI .fh-sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--fh-ink);transition:.15s}
+#fhUI .fh-sw.on{background:var(--fh-or)}#fhUI .fh-sw.on::after{left:22px}
+#fhUI .fh-knobs{display:flex;gap:8px;justify-content:space-around;flex-wrap:wrap}
+#fhUI .fh-knob{display:flex;flex-direction:column;align-items:center;gap:2px;width:92px;user-select:none;-webkit-user-select:none}
+#fhUI .fh-knob svg{width:66px;height:66px;touch-action:none;cursor:ns-resize}
+#fhUI .fh-knob .lbl{white-space:nowrap;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fh-ink);font-weight:800}
+#fhUI .fh-knob .val{font-family:var(--fh-mono);font-size:12px;color:var(--fh-muted)}
+#fhUI .fh-chips{display:flex;flex-wrap:wrap;gap:7px}
+#fhUI .fh-chip{background:var(--fh-plate);border:3px solid var(--fh-or);color:var(--fh-ink);padding:9px 12px;border-radius:5px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;letter-spacing:.02em;min-width:58px;min-height:0}
+#fhUI .fh-chip:hover{background:#fbe3cf}
+#fhUI .fh-chip.on{background:var(--fh-or);color:var(--fh-ink);box-shadow:inset 0 -3px 0 var(--fh-ord)}
+#fhUI .fh-order{display:flex;gap:4px}
+#fhUI .fh-order button{background:var(--fh-plate2);border:2px solid var(--fh-ink);color:var(--fh-ink);border-radius:4px;width:26px;height:24px;min-height:0;cursor:pointer;font-size:11px;padding:0;font-weight:900}
+#fhUI .fh-order button:disabled{opacity:.3}
+#fhUI .fh-flow{font-size:12px;color:var(--fh-plate);opacity:.75;font-family:var(--fh-mono);margin:14px 2px 8px}
+#fhUI .fh-presets{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#fhUI .fh-presets select{background:var(--fh-ink);color:var(--fh-orl);border:0;border-radius:6px;padding:9px;font:inherit;font-family:var(--fh-mono);font-weight:700;min-width:180px;flex:1;height:auto}
+@media (max-width:520px){#fhUI .fh-knob{width:80px}#fhUI .fh-knob .lbl{font-size:10px;letter-spacing:.06em}#fhUI .fh-knob svg{width:58px;height:58px}#fhUI .fh-word b{font-size:40px}#fhUI .fh-ico{width:50px;height:50px}}
 #secFx>summary .fhb{display:inline-block;background:#d9600b;color:#111;font:800 11px ui-monospace,Menlo,monospace;letter-spacing:.06em;border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:2px}
-.fxg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:10px 0}
-.fxm{background:var(--p2);border:1px solid var(--ln);border-left:4px solid #ef7a22;border-radius:12px;padding:10px 12px}
-.fxm.off{opacity:.55}.fxm h4{margin:0 0 6px;display:flex;align-items:center;gap:8px;font-size:14px}
-.fxm h4 label{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1}
-.fxm h4 .ord{display:flex;gap:4px}.fxm h4 .ord button{min-width:30px;min-height:30px;border-radius:8px;border:1px solid var(--ln);background:var(--p3);color:var(--tx)}
-.fxm .row{margin:6px 0}.fxm input[type=range]{width:100%}
-.fxchain{font:12px ui-monospace,Menlo,monospace;color:var(--mu);margin:6px 0}
 
 .pre.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
 .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
@@ -373,15 +419,78 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
   <details class="sec" id="secFx" data-fold="fx">
     <summary>Efectos FuzzHead<span class="fhb">FH</span> <small id="fxSum">apagados</small></summary>
     <div class="in">
-      <p class="hint">Los efectos de FuzzHead se aplican al sonido de los pads (sintetizador, sonidos FuzzHead o muestra) y van incluidos en todas las exportaciones (SP-404, Move, MPC, Live y WAV). Los 5 motores de FuzzHead están en «4 · Sonido», con el estilo «FuzzHead».</p>
-      <div class="row">
-        <label class="f"><span><input type="checkbox" id="fxOn"> Activar efectos</span></label>
-        <label class="f grow">Aplicar a<select id="fxWho"><option value="AB">bancos A y B</option><option value="A">solo banco A</option><option value="B">solo banco B</option></select></label>
-        <label class="f grow">Mezcla: <b id="fxMixV">100 %</b><input type="range" id="fxMix" min="0" max="1" step="0.05" value="1"></label>
+      <div id="fhUI">
+        <header class="fh-head">
+          <div class="fh-logo">
+            <svg class="fh-ico" viewBox="0 0 64 64" aria-hidden="true">
+              <circle cx="32" cy="32" r="31" fill="#d9600b"/>
+              <rect x="17" y="6" width="30" height="46" rx="1.5" fill="#f3efe9"/>
+              <g fill="#d9600b"><circle cx="22" cy="12" r="2.2"/><circle cx="28" cy="12" r="2.2"/><circle cx="36" cy="12" r="2.2"/><circle cx="42" cy="12" r="2.2"/>
+              <circle cx="32" cy="21" r="5"/><rect x="20" y="29" width="4" height="2"/><rect x="26" y="29" width="4" height="2"/><rect x="32" y="29" width="4" height="2"/><rect x="38" y="29" width="5" height="2"/>
+              <rect x="20" y="34" width="5" height="4"/><rect x="26.5" y="34" width="5" height="4"/><rect x="33" y="34" width="5" height="4"/><rect x="39.5" y="34" width="4" height="4"/>
+              <rect x="20" y="40" width="5" height="4"/><rect x="26.5" y="40" width="5" height="4"/><rect x="33" y="40" width="5" height="4"/><rect x="39.5" y="40" width="4" height="4"/>
+              <rect x="20" y="46" width="5" height="4"/><rect x="26.5" y="46" width="5" height="4"/><rect x="33" y="46" width="5" height="4"/><rect x="39.5" y="46" width="4" height="4"/></g>
+              <circle cx="32" cy="21" r="2.4" fill="#f3efe9"/>
+            </svg>
+            <div class="fh-word"><b>FUZZ</b><b>HEAD</b>
+              <svg class="fh-drips" viewBox="0 0 200 26" preserveAspectRatio="none" aria-hidden="true">
+                <g fill="#111" stroke="#f3efe9" stroke-width="1.5">
+                  <path d="M22 0 h5 v14 a2.5 2.5 0 0 1 -5 0z"/><path d="M71 0 h4 v20 a2 2 0 0 1 -4 0z"/>
+                  <path d="M118 0 h5 v10 a2.5 2.5 0 0 1 -5 0z"/><path d="M164 0 h4 v17 a2 2 0 0 1 -4 0z"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+          <div class="fh-row" style="justify-content:center;gap:12px;margin-top:10px">
+            <span class="fh-tag">FX para tus pads</span>
+            <div class="fh-seg" id="fhWho" title="Bancos a los que se aplican los efectos">
+              <button type="button" data-v="AB">A y B</button><button type="button" data-v="A">Solo A</button><button type="button" data-v="B">Solo B</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="fh-card">
+          <div class="fh-row" style="justify-content:space-between;align-items:center">
+            <div class="fh-presets" style="flex:1;min-width:240px">
+              <select id="fhPreset" aria-label="Preset de efectos"></select>
+              <button type="button" class="fh-btn sm" id="fhPrev" title="Anterior">◀</button>
+              <button type="button" class="fh-btn sm" id="fhNext" title="Siguiente">▶</button>
+            </div>
+            <div class="fh-row" style="gap:14px">
+              <label class="fh-row fh-muted" style="gap:8px;font-size:13px;font-weight:800;color:var(--fh-ink)"><button type="button" class="fh-sw" data-p="on" aria-label="Activar efectos"></button> Efectos</label>
+              <div class="fh-knobs" id="fhGlobal"></div>
+            </div>
+          </div>
+          <div class="fh-status" id="fhInfo">Los efectos se aplican al sonido de los pads (sintetizador, motores FuzzHead o muestra) y van incluidos en todas las exportaciones.</div>
+        </section>
+
+        <div class="fh-grid">
+          <div class="fh-mod" id="fhm-synth">
+            <h3><span class="ttl"><span class="nm">Motor de síntesis</span></span><button type="button" class="fh-sw" id="fhSynthSw" aria-label="Usar un motor FuzzHead como sonido de los pads"></button></h3>
+            <div class="fh-opts" style="display:flex;flex-direction:column;gap:10px">
+              <div class="fh-chips" id="fhEngines"></div>
+              <div class="fh-muted" id="fhEngineDesc" style="font-size:13px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fh-grid" style="margin-top:12px">
+          <div class="fh-mod" id="fhm-dist">
+            <h3><span class="ttl"><span class="nm">Distorsión</span></span><button type="button" class="fh-sw" data-p="distOn"></button></h3>
+            <div class="fh-knobs" id="fhDistK"></div>
+            <div class="fh-opts">
+              <div class="fh-chips" id="fhDistModes"></div>
+              <div class="fh-chips" style="margin-top:8px"><button type="button" class="fh-chip" id="fhPre">PRE</button><button type="button" class="fh-chip" id="fhPost">POST</button></div>
+            </div>
+          </div>
+          <div class="fh-mod" id="fhm-mod">
+            <h3><span class="ttl"><span class="nm">Modulación</span></span><button type="button" class="fh-sw" data-p="modOn"></button></h3>
+            <div class="fh-knobs" id="fhModK"></div>
+            <div class="fh-muted fh-opts" style="font-size:12px">Dos voces algo desafinadas (L/R) a partir del sonido de cada pad.</div>
+          </div>
+        </div>
+        <div class="fh-flow" id="fhFlow"></div>
+        <div class="fh-grid" id="fhGroup"></div>
       </div>
-      <div class="chips" id="fxPresets"></div>
-      <div class="fxchain" id="fxChain"></div>
-      <div class="fxg" id="fxMods"></div>
     </div>
   </details>
 
@@ -469,7 +578,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v12';
+  TP.VERSION = 'v13';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -3214,86 +3323,113 @@ function adgRack(items){
     $('soundSum').textContent = TP.presetById(S.preset).name;
   })();
 
-  // ------------------------------------------------------------ efectos FuzzHead
+  // ------------------------------------------------------------ efectos FuzzHead (mismo aspecto y controles que la app FuzzHead)
   var FXT = 0;
   function fxChanged(what) { touch(); fxUi(); R.step('Efectos FuzzHead: ' + what); clearTimeout(FXT); FXT = setTimeout(function () { cache.clear(); refreshAll(); }, 250); }
-  var FXM = [
-    { id: 'dist', name: 'Distorsión', on: 'distOn', ctl: [
-      { k: 'distMode', t: 'sel', l: 'Modo', o: [['soft', 'Soft'], ['hard', 'Hard'], ['rich', 'Rich'], ['wavefold', 'Wavefold']] },
-      { k: 'distGain', t: 'rng', l: 'Gain', min: 0, max: 1, st: 0.01, f: function (v) { return Math.round(v * 100) + ' %'; } },
-      { k: 'distPos', t: 'sel', l: 'Dónde', o: [['pre', 'Antes (PRE)'], ['post', 'Después (POST)'], ['both', 'Antes y después']] } ] },
-    { id: 'mod', name: 'Modulación', on: 'modOn', ctl: [
-      { k: 'modDepth', t: 'rng', l: 'Depth', min: 0, max: 1, st: 0.01, f: function (v) { return Math.round(v * 30) + ' cents'; } },
-      { k: 'modMix', t: 'rng', l: 'Mix', min: 0, max: 1, st: 0.01, f: function (v) { return Math.round(v * 100) + ' %'; } } ] },
-    { id: 'crush', name: 'Bitcrush', on: 'crushOn', grp: true, ctl: [
-      { k: 'crushRate', t: 'rng', l: 'Crush', min: 0, max: 1, st: 0.005, log: [44100, 441], f: function (v) { return v >= 1000 ? (v / 1000).toFixed(1) + ' kHz' : Math.round(v) + ' Hz'; } },
-      { k: 'crushBits', t: 'rng', l: 'Resolución', min: 1, max: 24, st: 1, f: function (v) { return Math.round(v) + ' bits'; } } ] },
-    { id: 'ring', name: 'Ring Mod', on: 'ringOn', grp: true, ctl: [
-      { k: 'ringFreq', t: 'rng', l: 'Freq', min: 0, max: 1, st: 0.005, log: [20, 5000], f: function (v) { return v >= 1000 ? (v / 1000).toFixed(2) + ' kHz' : Math.round(v) + ' Hz'; } },
-      { k: 'ringMix', t: 'rng', l: 'Mix', min: 0, max: 1, st: 0.01, f: function (v) { return Math.round(v * 100) + ' %'; } } ] },
-    { id: 'rev', name: 'Gated Reverb', on: 'revOn', grp: true, ctl: [
-      { k: 'revTime', t: 'rng', l: 'Time', min: 0, max: 1000, st: 10, f: function (v) { return Math.round(v) + ' ms'; } },
-      { k: 'revMix', t: 'rng', l: 'Mix', min: 0, max: 1, st: 0.01, f: function (v) { return Math.round(v * 100) + ' %'; } } ] }
-  ];
-  function fxGet(c) {
-    if (c.k === 'distPos') return S.fx.distPre && S.fx.distPost ? 'both' : (S.fx.distPost && !S.fx.distPre ? 'post' : 'pre');
-    var v = S.fx[c.k]; if (c.log) return Math.log(v / c.log[0]) / Math.log(c.log[1] / c.log[0]); return v;
+  var FH = { knobs: {}, fx: {} };
+  function fhPct(v) { return Math.round(v * 100) + '%'; }
+  function fhHz(v) { return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 1 : 2) + ' kHz' : Math.round(v) + ' Hz'; }
+  var FHK = {
+    mix: { lbl: 'Mix', min: 0, max: 1, fmt: fhPct },
+    distGain: { lbl: 'Gain', min: 0, max: 1, fmt: fhPct },
+    modDepth: { lbl: 'Depth', min: 0, max: 1, fmt: fhPct },
+    modMix: { lbl: 'Mix', min: 0, max: 1, fmt: fhPct },
+    crushRate: { lbl: 'Crush', min: 441, max: 44100, log: true, invert: true, fmt: fhHz },
+    crushBits: { lbl: 'Resolución', min: 1, max: 24, step: 1, fmt: function (v) { return Math.round(v) + ' bits'; } },
+    ringFreq: { lbl: 'Freq', min: 20, max: 5000, log: true, fmt: fhHz },
+    ringMix: { lbl: 'Mix', min: 0, max: 1, fmt: fhPct },
+    revTime: { lbl: 'Time', min: 0, max: 1000, step: 1, fmt: function (v) { return Math.round(v) + ' ms'; } },
+    revMix: { lbl: 'Mix', min: 0, max: 1, fmt: fhPct }
+  };
+  function fhNorm(d, v) { var t = d.log ? Math.log(v / d.min) / Math.log(d.max / d.min) : (v - d.min) / (d.max - d.min); return d.invert ? 1 - t : t; }
+  function fhVal(d, t) { t = Math.min(1, Math.max(0, t)); if (d.invert) t = 1 - t; var v = d.log ? d.min * Math.pow(d.max / d.min, t) : d.min + t * (d.max - d.min); if (d.step) v = Math.round(v / d.step) * d.step; return v; }
+  function fhArc(t) {
+    var a0 = -135 * Math.PI / 180, a1 = a0 + t * 270 * Math.PI / 180, r = 26, cx = 32, cy = 32;
+    return 'M' + (cx + r * Math.sin(a0)).toFixed(2) + ' ' + (cy - r * Math.cos(a0)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + (t * 270 > 180 ? 1 : 0) + ' 1 ' + (cx + r * Math.sin(a1)).toFixed(2) + ' ' + (cy - r * Math.cos(a1)).toFixed(2);
   }
-  function fxSet(c, v) {
-    if (c.k === 'distPos') { S.fx.distPre = v !== 'post'; S.fx.distPost = v !== 'pre'; return; }
-    if (c.t === 'sel') { S.fx[c.k] = v; return; }
-    v = parseFloat(v); if (c.log) v = c.log[0] * Math.pow(c.log[1] / c.log[0], v); S.fx[c.k] = v;
+  function fhSet(key, v, quiet) { S.fx[key] = v; if (!S.fx.on && key !== 'mix') S.fx.on = true; if (quiet) { touch(); fxUi(); clearTimeout(FXT); FXT = setTimeout(function () { cache.clear(); refreshAll(); }, 350); } else fxChanged(key + ' ' + (typeof v === 'number' ? +v.toFixed(3) : v)); fhCustom(); }
+  function fhKnob(key, parent) {
+    var d = FHK[key], el = document.createElement('div'); el.className = 'fh-knob';
+    el.innerHTML = '<svg viewBox="0 0 64 64" role="slider" tabindex="0" aria-label="' + d.lbl + '"><path d="' + fhArc(1) + '" stroke="#d6cec2" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<path class="arc" stroke="#111" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="32" cy="33.5" r="18" fill="#a94a07"/><circle cx="32" cy="32" r="18" fill="#d9600b"/>' +
+      '<circle cx="32" cy="32" r="11" fill="none" stroke="#ef7a22" stroke-width="1.5"/><line class="ptr" x1="32" y1="31" x2="32" y2="17" stroke="#f3efe9" stroke-width="3.5" stroke-linecap="round"/></svg>' +
+      '<div class="lbl">' + d.lbl + '</div><div class="val"></div>';
+    parent.appendChild(el);
+    var svg = el.querySelector('svg'), arc = el.querySelector('.arc'), ptr = el.querySelector('.ptr'), val = el.querySelector('.val');
+    var k = { el: el, update: function () { var t = fhNorm(d, S.fx[key]); arc.setAttribute('d', t > 0.002 ? fhArc(t) : ''); ptr.setAttribute('transform', 'rotate(' + (-135 + 270 * t) + ' 32 32)'); val.textContent = d.fmt(S.fx[key]); svg.setAttribute('aria-valuetext', d.fmt(S.fx[key])); } };
+    var y0 = 0, t0 = 0, drag = false;
+    svg.addEventListener('pointerdown', function (e) { drag = true; y0 = e.clientY; t0 = fhNorm(d, S.fx[key]); try { svg.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); });
+    svg.addEventListener('pointermove', function (e) { if (!drag) return; fhSet(key, fhVal(d, t0 + (y0 - e.clientY) * (e.shiftKey ? 0.0015 : 0.006)), true); });
+    function end() { if (drag) { drag = false; R.step('Efectos FuzzHead: ' + key + ' ' + d.fmt(S.fx[key])); } }
+    svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+    svg.addEventListener('dblclick', function () { fhSet(key, TP.fuzz.DEFAULT_FX[key]); });
+    svg.addEventListener('wheel', function (e) { e.preventDefault(); fhSet(key, fhVal(d, fhNorm(d, S.fx[key]) - Math.sign(e.deltaY) * 0.02), true); }, { passive: false });
+    svg.addEventListener('keydown', function (e) { var st = e.key === 'ArrowUp' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowDown' || e.key === 'ArrowLeft' ? -1 : 0; if (st) { e.preventDefault(); fhSet(key, fhVal(d, fhNorm(d, S.fx[key]) + st * 0.02), true); } });
+    FH.knobs[key] = k; k.update(); return k;
   }
-  function fxVal(c) { return c.t === 'rng' ? c.f(S.fx[c.k]) : ''; }
-  function fxBuild() {
-    var box = $('fxMods'); box.innerHTML = '';
-    var mods = FXM.filter(function (m) { return !m.grp; }).concat(S.fx.order.map(function (id) { return FXM.filter(function (m) { return m.id === id; })[0]; }));
-    mods.forEach(function (m) {
-      var card = el('div', 'fxm' + (S.fx[m.on] ? '' : ' off')); card.setAttribute('data-fx', m.id);
-      var gi = S.fx.order.indexOf(m.id);
-      var h = '<h4><label><input type="checkbox" ' + (S.fx[m.on] ? 'checked' : '') + '> ' + m.name + '</label>' +
-        (m.grp ? '<span class="ord"><button type="button" data-d="-1" title="Mover antes"' + (gi === 0 ? ' disabled' : '') + '>◀</button><button type="button" data-d="1" title="Mover después"' + (gi === 2 ? ' disabled' : '') + '>▶</button></span>' : '') + '</h4>';
-      m.ctl.forEach(function (c, ci) {
-        if (c.t === 'sel') h += '<div class="row"><label class="f grow">' + c.l + '<select data-c="' + ci + '">' + c.o.map(function (o) { return '<option value="' + o[0] + '"' + (fxGet(c) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label></div>';
-        else h += '<div class="row"><label class="f grow">' + c.l + ': <b data-v="' + ci + '">' + fxVal(c) + '</b><input type="range" data-c="' + ci + '" min="' + c.min + '" max="' + c.max + '" step="' + c.st + '" value="' + fxGet(c) + '"></label></div>';
-      });
-      card.innerHTML = h; box.appendChild(card);
-      card.querySelector('h4 input').onchange = function () { S.fx[m.on] = this.checked; if (this.checked && !S.fx.on) { S.fx.on = true; } fxBuild(); fxChanged(m.name + (this.checked ? ' on' : ' off')); };
-      Array.prototype.forEach.call(card.querySelectorAll('.ord button'), function (b) {
-        b.onclick = function () { var o = S.fx.order.slice(), i = o.indexOf(m.id), j = i + parseInt(b.getAttribute('data-d'), 10); if (j < 0 || j > 2) return; o[i] = o[j]; o[j] = m.id; S.fx.order = o; fxBuild(); fxChanged('orden ' + o.join('>')); };
-      });
-      Array.prototype.forEach.call(card.querySelectorAll('[data-c]'), function (inp) {
-        var c = m.ctl[+inp.getAttribute('data-c')];
-        inp.oninput = function () { fxSet(c, inp.value); var vb = card.querySelector('[data-v="' + inp.getAttribute('data-c') + '"]'); if (vb) vb.textContent = fxVal(c); };
-        inp.onchange = function () { fxSet(c, inp.value); fxChanged(m.name + ' ' + c.l); };
-      });
-    });
+  var FH_ENG = [['deep', 'Deep', 'Grave y con mucho peso: seno + sub-octava, saturado suave.'], ['vintage', 'Vintage', 'Cálido y redondo, carácter analógico clásico.'],
+    ['solo', 'Solo', 'Lead brillante y mordiente; el filtro se abre al atacar.'], ['strings', 'Strings', 'Textura de cuerdas electrónicas, ataque lento y ancho.'],
+    ['harmony', 'Harmony', 'Nota + quinta + octava (intervalos +7 y +12 semitonos).']];
+  function fhEngine() { var pr = TP.presetById(S.preset); return pr && pr.fh ? pr.fh : null; }
+  function fhPick(id) { var cur = TP.presetById(S.preset); if (!cur.fh) S.fhPrev = S.preset; S.preset = id; R.step('Sonido: ' + id + ' (desde Efectos FuzzHead)'); renderPresets(); $('soundSum').textContent = TP.presetById(id).name; touch(); fxUi(); refreshAll(); }
+  function fhCustom() { var sel = $('fhPreset'); if (sel.value !== '') { var pr = TP.fuzz.FX_PRESETS[+sel.value]; var keep = { who: S.fx.who, mix: S.fx.mix, on: S.fx.on }; var want = Object.assign(JSON.parse(JSON.stringify(TP.fuzz.DEFAULT_FX)), JSON.parse(JSON.stringify(pr.fx)), keep); if (want.on !== S.fx.on) want.on = S.fx.on; if (JSON.stringify(want) !== JSON.stringify(S.fx)) sel.value = ''; } }
+  function fhPreset(i) {
+    var pr = TP.fuzz.FX_PRESETS[i], keep = { who: S.fx.who, mix: S.fx.mix };
+    S.fx = Object.assign(JSON.parse(JSON.stringify(TP.fuzz.DEFAULT_FX)), JSON.parse(JSON.stringify(pr.fx)), keep);
+    S.fx.on = pr.id !== 'none'; $('fhPreset').value = String(i); fxChanged('preset ' + pr.name);
   }
+  var FH_FX = { crush: { name: 'Bitcrush', on: 'crushOn', k: ['crushRate', 'crushBits'] }, ring: { name: 'Ring Mod', on: 'ringOn', k: ['ringFreq', 'ringMix'] }, rev: { name: 'Gated Reverb', on: 'revOn', k: ['revTime', 'revMix'] } };
+  function fhMove(id, dir) { var o = S.fx.order.slice(), i = o.indexOf(id), j = i + dir; if (j < 0 || j >= o.length) return; var t = o[i]; o[i] = o[j]; o[j] = t; S.fx.order = o; fxChanged('orden ' + o.join('>')); fhCustom(); }
   function fxUi() {
-    $('fxOn').checked = S.fx.on; $('fxWho').value = S.fx.who; $('fxMix').value = S.fx.mix; $('fxMixV').textContent = Math.round(S.fx.mix * 100) + ' %';
-    var names = { dist: 'Distorsión', mod: 'Modulación', crush: 'Bitcrush', ring: 'Ring Mod', rev: 'Gated Reverb' }, act = [];
-    if (S.fx.modOn) act.push('Modulación'); if (S.fx.distOn && (S.fx.distPre || !S.fx.distPost)) act.push('Dist PRE');
+    for (var k in FH.knobs) FH.knobs[k].update();
+    Array.prototype.forEach.call(document.querySelectorAll('#fhUI .fh-sw[data-p]'), function (b) { b.classList.toggle('on', !!S.fx[b.getAttribute('data-p')]); });
+    Array.prototype.forEach.call(document.querySelectorAll('#fhWho button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === S.fx.who); });
+    Array.prototype.forEach.call(document.querySelectorAll('#fhDistModes .fh-chip'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === S.fx.distMode); });
+    $('fhPre').classList.toggle('on', !!S.fx.distPre); $('fhPost').classList.toggle('on', !!S.fx.distPost);
+    var eng = fhEngine();
+    $('fhSynthSw').classList.toggle('on', !!eng); $('fhm-synth').classList.toggle('off', !eng);
+    Array.prototype.forEach.call(document.querySelectorAll('#fhEngines .fh-chip'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === eng); });
+    var ei = FH_ENG.filter(function (e) { return e[0] === eng; })[0];
+    $('fhEngineDesc').textContent = ei ? ei[2] + ' Suena en los pads como «' + TP.presetById(S.preset).name + '».' : 'Los pads usan ahora «' + TP.presetById(S.preset).name + '». Elige un motor para usar un sonido FuzzHead (también en «4 · Sonido»).';
+    var all = !S.fx.on;
+    $('fhm-dist').classList.toggle('off', all || !S.fx.distOn); $('fhm-mod').classList.toggle('off', all || !S.fx.modOn);
+    for (var id in FH_FX) FH.fx[id].classList.toggle('off', all || !S.fx[FH_FX[id].on]);
+    var g = $('fhGroup'); S.fx.order.forEach(function (id, i) { var el = FH.fx[id]; g.appendChild(el); var bs = el.querySelectorAll('.fh-order button'); bs[0].disabled = i === 0; bs[1].disabled = i === S.fx.order.length - 1; });
+    var names = { crush: 'Bitcrush', ring: 'Ring Mod', rev: 'Gated Reverb' };
+    $('fhFlow').textContent = 'Cadena: Pad → Mod → Dist PRE → ' + S.fx.order.map(function (i) { return names[i]; }).join(' → ') + ' → Dist POST → Mix → Pad con efectos';
+    var act = [];
+    if (S.fx.modOn) act.push('Modulación'); if (S.fx.distOn && S.fx.distPre) act.push('Dist PRE');
     S.fx.order.forEach(function (id) { if (S.fx[id + 'On']) act.push(names[id]); }); if (S.fx.distOn && S.fx.distPost) act.push('Dist POST');
     $('fxSum').textContent = TP.fuzz.active(S.fx) ? act.join(' · ') + (S.fx.who === 'AB' ? '' : ' (solo ' + S.fx.who + ')') : 'apagados';
-    $('fxChain').textContent = 'Cadena: sonido del pad → Modulación → Dist PRE → ' + S.fx.order.map(function (id) { return names[id]; }).join(' → ') + ' → Dist POST → mezcla';
-    Array.prototype.forEach.call(document.querySelectorAll('#fxPresets .chip'), function (b) { b.classList.remove('on'); });
-    if (!$('fxMods').children.length) fxBuild();
   }
   (function () {
-    var bx = $('fxPresets');
-    TP.fuzz.FX_PRESETS.forEach(function (pr) {
-      var b = el('button', 'chip', esc(pr.name)); b.type = 'button';
-      b.onclick = function () {
-        var keep = { who: S.fx.who, mix: S.fx.mix }; S.fx = Object.assign(JSON.parse(JSON.stringify(TP.fuzz.DEFAULT_FX)), JSON.parse(JSON.stringify(pr.fx)), keep);
-        S.fx.on = pr.id !== 'none'; fxBuild(); fxUi(); b.classList.add('on'); fxChanged('preset ' + pr.name);
-      };
-      bx.appendChild(b);
+    fhKnob('mix', $('fhGlobal')); fhKnob('distGain', $('fhDistK')); fhKnob('modDepth', $('fhModK')); fhKnob('modMix', $('fhModK'));
+    var sel = $('fhPreset'); sel.innerHTML = '<option value="">— personalizado —</option>' + TP.fuzz.FX_PRESETS.map(function (p, i) { return '<option value="' + i + '">' + esc(p.name) + '</option>'; }).join('');
+    sel.value = '';
+    sel.onchange = function () { if (sel.value !== '') fhPreset(+sel.value); };
+    function stepP(d) { var n = TP.fuzz.FX_PRESETS.length, i = sel.value === '' ? (d > 0 ? -1 : 0) : +sel.value; fhPreset(((i + d) % n + n) % n); }
+    $('fhPrev').onclick = function () { stepP(-1); }; $('fhNext').onclick = function () { stepP(1); };
+    Array.prototype.forEach.call(document.querySelectorAll('#fhWho button'), function (b) { b.onclick = function () { S.fx.who = b.getAttribute('data-v'); fxChanged('aplicar a ' + S.fx.who); }; });
+    FH_ENG.forEach(function (e) { var b = el('button', 'fh-chip', e[1]); b.type = 'button'; b.setAttribute('data-v', e[0]); b.onclick = function () { fhPick('fh_' + e[0]); }; $('fhEngines').appendChild(b); });
+    $('fhSynthSw').onclick = function () { if (fhEngine()) fhPick(S.fhPrev && !TP.presetById(S.fhPrev).fh ? S.fhPrev : 'punk_saw'); else fhPick('fh_vintage'); };
+    [['soft', 'Soft'], ['hard', 'Hard'], ['rich', 'Rich'], ['wavefold', 'Wavefold']].forEach(function (m) { var b = el('button', 'fh-chip', m[1]); b.type = 'button'; b.setAttribute('data-v', m[0]); b.onclick = function () { fhSet('distMode', m[0]); }; $('fhDistModes').appendChild(b); });
+    $('fhPre').onclick = function () { if (S.fx.distPre && !S.fx.distPost) return; fhSet('distPre', !S.fx.distPre); };
+    $('fhPost').onclick = function () { if (S.fx.distPost && !S.fx.distPre) return; fhSet('distPost', !S.fx.distPost); };
+    Object.keys(FH_FX).forEach(function (id) {
+      var f = FH_FX[id], m = el('div', 'fh-mod'); m.id = 'fhm-' + id;
+      m.innerHTML = '<h3><span class="ttl"><span class="fh-order"><button type="button" data-dir="-1" title="Mover antes">◀</button><button type="button" data-dir="1" title="Mover después">▶</button></span><span class="nm">' + f.name + '</span></span><button type="button" class="fh-sw" data-p="' + f.on + '"></button></h3><div class="fh-knobs"></div>';
+      f.k.forEach(function (k) { fhKnob(k, m.querySelector('.fh-knobs')); });
+      Array.prototype.forEach.call(m.querySelectorAll('.fh-order button'), function (b) { b.onclick = function () { fhMove(id, +b.getAttribute('data-dir')); }; });
+      FH.fx[id] = m;
     });
-    $('fxOn').onchange = function () { S.fx.on = this.checked; fxChanged(this.checked ? 'activados' : 'desactivados'); };
-    $('fxWho').onchange = function () { S.fx.who = this.value; fxChanged('aplicar a ' + this.value); };
-    $('fxMix').oninput = function () { $('fxMixV').textContent = Math.round(this.value * 100) + ' %'; };
-    $('fxMix').onchange = function () { S.fx.mix = parseFloat(this.value); fxChanged('mezcla ' + S.fx.mix); };
-    fxBuild(); fxUi();
+    // interruptores (también los de los módulos añadidos después)
+    $('fhUI').addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.fh-sw[data-p]'); if (!b) return;
+      var p = b.getAttribute('data-p'), v = !S.fx[p];
+      if (p === 'on') { S.fx.on = v; fxChanged(v ? 'activados' : 'desactivados'); return; }
+      fhSet(p, v);
+    });
+    fxUi();
   })();
 
   // ------------------------------------------------------------ 5 · pads
