@@ -581,7 +581,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v13.02';
+  TP.VERSION = 'v13.03';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -3828,6 +3828,14 @@ function adgRack(items){
   TP._state = S; TP._wave = wave; TP._padBufs = function () { return padBufs; };
 })();
 
+</script>
+<script src="sh-core.js"></script>
+<script>/* v13.03: conexión con todas las apps (sh-core): recibe un audio (por ejemplo una pista del Extractor) para detectar tono y escala */
+(function(){
+  if(!window.SH)return;
+  SH.ui.dock({me:'tonopad',pos:'right',bottom:70,kinds:['stem','loop','pad'],provide:null,sendHint:'TonoPad exporta bancos para tus máquinas',
+    accept:async list=>{const it=list.find(x=>x.wav);if(!it)return false;return SH.ui.feedInput('#file',SH.toFile(it))}});
+})();
 </script>
 </body>
 </html>
