@@ -216,6 +216,9 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 .pad .bd.syn{color:var(--mu);opacity:.7}.pad .bd.warn{color:var(--pink)}
 .pad .nn.ch{font-size:clamp(13px,3.9vw,18px)}
 #smpWv{height:130px}
+
+/* zona segura: que nada quede bajo la hora, la batería o la cámara del móvil (y abajo, bajo la barra de gestos) */
+.top{padding-top:calc(8px + env(safe-area-inset-top,0px))}
 </style>
 </head>
 <body>
@@ -578,7 +581,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v13.01';
+  TP.VERSION = 'v13.02';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
