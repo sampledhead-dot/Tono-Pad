@@ -15,6 +15,7 @@ App web (sin dependencias, funciona con doble clic en `index.html` o el standalo
 - `job.js` Workers (render y análisis) creados desde Blob, con fallback al hilo principal
 - `wave.js` editor de región con zoom · `exporters.js` WAV/ZIP/MIDI/Move/Live (plantillas de CrazyHead en `tpl_*.js`)
 - `fuzz.js` (v12) **FuzzHead integrado**: sus 5 motores (`TP.fuzz.renderNote`) y su cadena de efectos (`TP.fuzz.applyFx`). Es el mismo DSP que la app FuzzHead (repo FuzzHead, `web/dsp.js` v1.0.1); si se cambia allí, cambiarlo aquí igual.
+- **TapeHead integrado (v13.04)**: motor `TapeHead` (copia de `dsp/tapehead.js` del repo TapeHead v1.0.0, función `tpTapeHead`, también inyectada en el Worker de render, trabajo `tape`) e interfaz `TapeHeadUI` (copia de `web/th-ui.js`). Si se cambian allí, copiarlos aquí igual.
 - `app.js` interfaz (acordeones). Módulos escritos como funciones con nombre (`tpMusic`…) para poder inyectarlos en los Workers.
 - `build.py` compila `src/` en 3 archivos y el zip. PWA: `sw.js`, `manifest.webmanifest`.
 
@@ -22,6 +23,7 @@ App web (sin dependencias, funciona con doble clic en `index.html` o el standalo
 AudioContext creado al arrancar (`latencyHint:interactive`) y reanudado en el primer toque; las 16 muestras se pre-renderizan en un Worker a la frecuencia del contexto; el toque solo lanza un `BufferSource`; el cabezal se pinta en un canvas aparte. La app muestra la latencia medida.
 
 ## Historial
+- **v13.04** (19-11-2026): **TapeHead** dentro de TonoPad: nueva sección «TapeHead» con el mismo aspecto que el plugin (multipista de casete de los 80: casete con el nombre del preset escrito a mano, vúmetro que se mueve al tocar un pad, mandos DRIVE/GRAVES/AGUDOS/MIX/OUTPUT y teclas de transporte). Teclas propias: ON/OFF, bancos (A y B / Solo A / Solo B) y ANTES/DESPUÉS de los efectos FuzzHead. 24 presets (general, guitarra, bajo, batería: punk, hardcore, post-punk, indie 80s/90s, lo-fi, grunge, noise). Se procesa en el Worker de render (la interfaz no se traba), suena en los pads y va en todas las exportaciones; se guarda en proyectos y en el informe de error. Como los efectos FuzzHead, «Nuevo proyecto» no lo reinicia.
 - **v13.03** (19-11-2026): conexión con todas las apps de Sampled Head (sh-core): botón «⇄ Apps» con «Recibido» y «Enviar a…»; en Windows/Mac usa la carpeta Documentos/SampledHead. Lo recibido se carga como audio para detectar tono y escala.
 - **v13.02** (19-11-2026) — zona segura: la cabecera (y, donde las hay, las ventanas a pantalla completa y la barra inferior) deja libre la franja de la hora, la batería y la cámara del móvil con `env(safe-area-inset-*)`. Comprobado en Chrome simulando un móvil con 48 px arriba y 24 px abajo: ningún botón tapado. En ordenador no cambia nada.
 - **v13.01** — Paso a la numeración estándar `vX.YY` (propuesta en el pull request #1, que se cerró porque partía de la v11). Mismo contenido que la v13; sin cambios de funcionamiento.
@@ -48,6 +50,7 @@ AudioContext creado al arrancar (`latencyHint:interactive`) y reanudado en el pr
 - No se conoce el significado de las palabras 4, 5 y 15 de la ficha ni de la cabecera; se dejan por defecto.
 
 ## Límites conocidos
+- **TapeHead (v13.04):** ~0,1 s de cálculo por pad de 3 s (en el Worker). Probado en Chrome de escritorio sin pantalla (sin audio cargado: se comprobó que los pads pasan por TapeHead, que al apagarlo dejan de hacerlo y que la interfaz no se bloquea); no oído en un dispositivo real ni probado en móvil.
 - **FuzzHead (v12):** la modulación de los pads se hace leyendo la muestra algo más lenta/rápida (en FuzzHead son voces del sintetizador): en notas largas las voces se van desfasando, como un chorus lento. La afinación de los motores FuzzHead se comprobó con su detector (±2 cents en Solo, <0,1 en el resto). Probado en Chrome de escritorio sin pantalla; no en móvil.
 - **Código fuente:** v12 se aplicó directamente sobre `index.html` (la carpeta `src/` completa y `build.py` no están en el repositorio). El módulo nuevo está también en `src/js/fuzz.js`; si se vuelve a compilar desde `src/`, hay que añadir ese archivo al build y los cambios de `app.js`/`synth.js` (presets FuzzHead, `renderPad` con efectos, pestaña de efectos).
 - El proyecto SP-404 generado no se ha probado en la máquina (solo contra el proyecto de ejemplo).
