@@ -590,7 +590,7 @@ input.txt{background:var(--p3);color:var(--tx);border:1px solid var(--ln);border
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v13.04';
+  TP.VERSION = 'v13.05';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -3883,7 +3883,10 @@ function adgRack(items){
     var all = !S.fx.on;
     $('fhm-dist').classList.toggle('off', all || !S.fx.distOn); $('fhm-mod').classList.toggle('off', all || !S.fx.modOn);
     for (var id in FH_FX) FH.fx[id].classList.toggle('off', all || !S.fx[FH_FX[id].on]);
-    var g = $('fhGroup'); S.fx.order.forEach(function (id, i) { var el = FH.fx[id]; g.appendChild(el); var bs = el.querySelectorAll('.fh-order button'); bs[0].disabled = i === 0; bs[1].disabled = i === S.fx.order.length - 1; });
+    /* v13.05: reordenar los módulos solo si el orden cambió (moverlos en el DOM durante el arrastre de un mando lo cortaba
+       y Bitcrush, Ring Mod y Gated Reverb no hacían el recorrido completo) */
+    var g = $('fhGroup'), need = S.fx.order.some(function (id, i) { return g.children[i] !== FH.fx[id]; });
+    S.fx.order.forEach(function (id, i) { var el = FH.fx[id]; if (need) g.appendChild(el); var bs = el.querySelectorAll('.fh-order button'); bs[0].disabled = i === 0; bs[1].disabled = i === S.fx.order.length - 1; });
     var names = { crush: 'Bitcrush', ring: 'Ring Mod', rev: 'Gated Reverb' };
     $('fhFlow').textContent = 'Cadena: Pad → Mod → Dist PRE → ' + S.fx.order.map(function (i) { return names[i]; }).join(' → ') + ' → Dist POST → Mix → Pad con efectos';
     var act = [];
