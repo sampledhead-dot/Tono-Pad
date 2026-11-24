@@ -641,7 +641,7 @@ body[data-o=A] #bkTitle{color:var(--acc)}body[data-o=B] #bkTitle{color:var(--vio
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v14.00';
+  TP.VERSION = 'v14.01';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -4649,6 +4649,43 @@ function adgRack(items){
   if(!window.SH)return;
   SH.ui.dock({me:'tonopad',pos:'right',bottom:70,kinds:['stem','loop','pad'],provide:null,sendHint:'TonoPad exporta bancos para tus máquinas',
     accept:async list=>{const it=list.find(x=>x.wav);if(!it)return false;return SH.ui.feedInput('#file',SH.toFile(it))}});
+})();
+</script>
+<script>
+/* v14.01: menú común «☰ Menú» de todas las apps (sh-core 1.5.0): Proyecto · Importar · Exportar · Otras apps · Copia de
+   tus datos · Ajustes · Ayuda. El botón «Informe» de arriba pasa a ser el menú (el informe está en Ayuda). */
+(function(){
+  if(!window.SH||!SH.ui||!SH.ui.menu)return;
+  const go=id=>()=>{const d=document.getElementById(id);if(!d)return;if(d.tagName==='DETAILS')d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});};
+  const tabTo=(t,id)=>()=>{document.querySelectorAll('.mt').forEach(b=>{if(b.getAttribute('data-tab')===t)b.click();});setTimeout(go(id),50);};
+  SH.ui.menu({
+    me:'tonopad',version:()=>TP.VERSION.replace(/^v/,''),button:'#repTop',
+    proyecto:[
+      {icon:'📁',run:go('secProj'),pri:true,label:'Mis proyectos'},
+      {icon:'💾',click:'#projSave',label:'Guardar proyecto'},
+      {icon:'💾',click:'#projSaveNew'},
+      {icon:'🆕',click:'#projNew',label:'Nuevo proyecto'},
+      {icon:'⬇',click:'#projExport',label:'Guardar proyecto en un archivo (.tonopad)'},
+      {icon:'⬆',click:'#projImport',label:'Abrir proyecto de un archivo (.tonopad)'}
+    ],
+    importar:[
+      {icon:'🎵',run:()=>{tabTo('song','secSong')();document.getElementById('file').click();},label:'Abrir una canción'},
+      {icon:'🎸',run:()=>{tabTo('sample','secSample')();document.getElementById('smpFile').click();},label:'Cargar muestras (instrumento)'}
+    ],
+    exportar:[
+      {icon:'⬇',run:go('secExport'),pri:true,label:'Opciones de exportación…'},
+      {title:'Directo, con las opciones actuales'},
+      {icon:'🎛',click:'.btn.exp[data-t="sp404p"]',label:'SP-404MKII · proyecto'},
+      {icon:'🎛',click:'.btn.exp[data-t="sp404"]',label:'SP-404MKII · WAV'},
+      {icon:'🎛',click:'.btn.exp[data-t="move"]',label:'Ableton Move'},
+      {icon:'🎛',click:'.btn.exp[data-t="mpc"]',label:'MPC Sample'},
+      {icon:'🎹',click:'.btn.exp[data-t="live"]',label:'Ableton Live (.adg)'},
+      {icon:'🗂',click:'.btn.exp[data-t="wav"]',label:'WAV en ZIP'},
+      {icon:'🎼',click:'.btn.exp[data-t="midi"]',label:'MIDI'}
+    ],
+    ajustes:[{icon:'🎹',click:'#midiBtn'}],
+    report:()=>document.getElementById('repBtn').click()
+  });
 })();
 </script>
 </body>
