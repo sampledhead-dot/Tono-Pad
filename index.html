@@ -690,7 +690,7 @@ body[data-o=A] #bkTitle{color:var(--acc)}body[data-o=B] #bkTitle{color:var(--vio
 (function (root) {
   'use strict';
   var TP = root.TP = root.TP || {};
-  TP.VERSION = 'v15.01';
+  TP.VERSION = 'v15.02';
   TP.APP = 'TonoPad';
 
   var logs = [], timeline = [], t0 = Date.now(), stage = { where: 'inicio', stage: 'carga de la app', progress: 0 }, provider = null, lastAuto = 0, lastErr = null;
@@ -3764,7 +3764,15 @@ function adgRack(items){
   async function connect(log, which) {
     var k = typeof which === 'object' && which ? 'given' : which || available(), t = typeof which === 'object' ? which : null;
     if (!k) throw new Error('Este navegador no puede usar el puerto USB. En el móvil usa el APK de SampledHead (o TonoPad); en el ordenador, Chrome o Edge.');
-    if (!t) t = k === 'apk' ? await viaAndroid() : k === 'serial' ? await viaSerial() : await viaWebUsb();
+    try { if (!t) t = k === 'apk' ? await viaAndroid() : k === 'serial' ? await viaSerial() : await viaWebUsb(); }
+    catch (e) {
+      var m = String(e && e.message || e);
+      if ((e && e.name === 'NotFoundError') || /No port selected|No device selected/i.test(m))
+        throw new Error('No se encuentra la SP-404MKII en el USB. Comprueba que está encendida, que el cable es de datos (no solo de carga) y que la app de Roland está cerrada.' + (root.shDesktop ? ' En el programa SampledHead hace falta la versión 1.0.9 o posterior.' : ''));
+      if ((e && e.name === 'InvalidStateError') || /already open|busy|Failed to open/i.test(m))
+        throw new Error('El puerto USB de la SP está ocupado: cierra la app de Roland (o SparkyMK2) y vuelve a conectar. (' + m + ')');
+      throw e;
+    }
     var d = new Device(t, log); d.kind = t.kind;
     await sleep(350);                                     // la app oficial espera antes del primer mensaje
     var st = null, err = null;

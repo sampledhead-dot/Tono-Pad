@@ -1,4 +1,4 @@
-const C='tonopad-v15.01-c1';
+const C='tonopad-v15.02-c1';
 const FILES=['./','index.html','manifest.webmanifest','sh-core.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.indexOf('tonopad-')===0&&k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
